@@ -1,22 +1,30 @@
+---
+title: "Quantitative evaluation of candidate generation and selection methods"
+---
+
 This report present quantitative results for multiple way of generating candidates and selecting those candidates.
 
 Candidates methods:
+
 - _maximal_ – maximal rectangles containing no defects.
 - _... + intersection_ – augments _maximal_ with all the intersections and differences between any two overlapping rectangles.
-- _... + min. size_ – augments _maximal + intersection_ with intersections and differences resolved based on the minimum size of a cut for a particular grade (see image below for an example).
+- _... + min. size_ – augments _maximal + intersection_ with differences resolved based on the minimum size of a cut for a particular grade (see image below for an example).
 
-![cut-overlap-aug.png](imgs/cut-overlap-aug.png)
+<img src="imgs/cut-overlap-aug.png" alt="cutting based on minimum size" width="300" />
 
 Selection methods:
+
 - _exhaustive_ – iterates through all combinations of candidates, but stops when it finds a solution that yields the required cutting units (consequently, this method returns the optimal grade, but not necessarily the largest area).
 - _greedy_ – selects candidates greedily by area. The candidates are fixed from the start. The variant used was `greedy-fixed`.
 - _ipqp_ – selects candidates based on the IPQP (or IPFP) algorithm. It uses a penalty on conflicts of 10 and removes the duplicate candidates. The variant used was `ipqp-alpha-10-no-dups`.
 - _ipqp-neg-cost_ – uses the IPQP algorithm (with the same settings as before), but adds a further constraint that prevents selecting an existing cut, but composed out of two disjoint cuts.
 
 Dataset:
+
 - 1998 Red Oak dataset, but only the subset of boards which were graded FAS.
 
 Metrics:
+
 - Proportion of faces that were accurately predicted as FAS, according to the NHLA rule book.
 - Relative area of the selected cuts to the full board size. We report mean and median values. We use the number of cuts as imposed by the grade (is this right?)
 

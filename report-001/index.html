@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Initial experiments on cut optimization</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Initial experiments on cut optimization</h1>
+</header>
+<p>I have worked on two tasks:</p>
+<ol type="1">
+<li>Generating maximal candidates</li>
+<li>Optimizing the selection of candidates</li>
+</ol>
+<p><strong>Generating maximal candidates.</strong> Given a board with defects, the goal of this task is to enumerate all the maximal empty rectangles. A <em>maximal empty rectangle</em> (MER) is defined as a rectangle containing no defects and not included in any other defect-free rectangle. Both the board and the defects are represented as rectangles and the data is randomly generated (but we could also use the annotations from various datasets; <em>e.g.</em>, Salum, Oulu).</p>
+<p>Here is an example of a board (in blue) and defects (in red):</p>
+<figure>
+<img src="imgs/board.png" alt="board" /><figcaption>board</figcaption>
+</figure>
+<p>And here are candidate MERs of different types:</p>
+<ul>
+<li>delimited by two opposite sides of the boards (top-bottom and left-right) <img src="imgs/mers-1a.png" alt="mers-1a" /> <img src="imgs/mers-1b.png" alt="mers-1b" /></li>
+<li>delimited by two adjacent sides of the boards <img src="imgs/mers-2.png" alt="mers-2" /></li>
+<li>delimited by one side of the board (top, left, bottom, right) <img src="imgs/mers-3a.png" alt="mers-3a" /> <img src="imgs/mers-3b.png" alt="mers-3b" /> <img src="imgs/mers-3c.png" alt="mers-3c" /> <img src="imgs/mers-3d.png" alt="mers-3d" /></li>
+</ul>
+<p>The code for this part is available <a href="https://bitbucket.org/doneata/optim-cut/src/master/candidates.py">here</a>.</p>
+<p><strong>Optimizing the selection of candidates.</strong> The goal is to select the candidate rectangles such <em>(i)</em> the area they cover is maximized and <em>(ii)</em> any two rectangles do not overlap. To do this we want to optimize the following problem:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\underset{\mathbf{x}}{\text{maximize}} \;\; &amp; \mathbf{w}^\intercal\mathbf{x} \\
+\text{subject to} \;\; &amp;  x_i \in \left\{0, 1\right\}, \forall i \\
+                       &amp; \mathbf{x}^\intercal \mathbf{A} \mathbf{x} = 0
+\end{aligned}
+\]</span></p>
+<p>where</p>
+<ul>
+<li><span class="math inline">\(\mathbf{x}\)</span> indicates the selection of rectangles, that is, <span class="math inline">\(x_i = 1\)</span> if we select the <span class="math inline">\(i\)</span>-th rectangle and <span class="math inline">\(x_i = 0\)</span> otherwise.</li>
+<li><span class="math inline">\(\mathbf{w}\)</span> contains the area of each of the candidate rectangles.</li>
+<li><span class="math inline">\(\mathbf{A}\)</span> is a binary matrix with <span class="math inline">\(A_{ij} = 1\)</span> if rectangles <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> overlap and <span class="math inline">\(A_{ij} = 0\)</span> otherwise.</li>
+</ul>
+<p>To simplify the optimization problem, I modify it in two ways: <em>(i)</em> relax the problem to continuous domain; <em>(ii)</em> move the quadratic constraint into the objective function. The new optimization problem is:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\underset{\mathbf{x}}{\text{maximize}} \;\; &amp; \mathbf{w}^\intercal\mathbf{x} - \alpha \frac{1}{2} \mathbf{x}^\intercal \mathbf{A} \mathbf{x} \\
+\text{subject to} \;\; &amp;  x \ge 0, \forall i\\
+                       &amp; \|\mathbf{x}\|_1 = 1
+\end{aligned}
+\]</span></p>
+<p>To solve this I’m using the <a href="https://cvxopt.org"><code>cvxopt</code></a> package from Python. However, currently I’m running into some numerical issues that I need to look into. The code for this part is available <a href="https://bitbucket.org/doneata/optim-cut/src/master/cut_qp.py">here</a>.</p>
+</body>
+</html>
