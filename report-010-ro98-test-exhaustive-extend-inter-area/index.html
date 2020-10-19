@@ -19,6 +19,15 @@
             <em>1998 data bank for kiln-dried red oak lumber </em>
           </a>consists of 3,487 boards which were graded automatically and then whose grades were refined manually. On this web-page we are working on a subset of boards (the 'test' split), and we are showing those boards that our algorithm graded differently than the groundtruth.
         </p>
+        <p>We are using the following settings:</p>
+        <ul>
+          <li>candidates: maximal + intersection-based candidates</li>
+          <li>selection: exhaustive (but stop the search once the desired grade is achieved)</li>
+        </ul>
+        <p>Confusion matrix:</p>
+        <div>
+          <img src="ro98-test-exhaustive-extend-inter-area.png">
+        </div>
         <p>
           <span>Color code:</span>
           <ul>
