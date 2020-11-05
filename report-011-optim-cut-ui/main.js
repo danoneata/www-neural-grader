@@ -72,64 +72,228 @@ var defects = {
   back: [],
 };
 
-function main(board, defects) {
-  function getCuttingUnits(cut) {
-    let ww = math
-        .multiply(cut.height() * K, RESOLUTION)
-        .to("inch")
-        .toNumber(),
-      ll = math
-        .multiply(cut.width() * K, RESOLUTION)
-        .to("feet")
-        .toNumber();
-    return ww * ll;
+var index = 0,
+  boardShape = null,
+  defectShapes = [],
+  cutShapes = [];
+
+var actionType = null,
+  selectedCut = null,
+  selectedIndex = null;
+var offset = { x: 0, y: 0 };
+
+function getCuttingUnits(cut) {
+  let ww = math
+      .multiply(cut.height() * K, RESOLUTION)
+      .to("inch")
+      .toNumber(),
+    ll = math
+      .multiply(cut.width() * K, RESOLUTION)
+      .to("feet")
+      .toNumber();
+  return ww * ll;
+}
+
+function updateCutsTable(cut) {
+  let i = cut.attr("index");
+  let x = cut.attr("x"),
+    y = cut.attr("y"),
+    w = cut.attr("width"),
+    h = cut.attr("height");
+  let ww = math
+      .multiply(h * K, RESOLUTION)
+      .to("inch")
+      .toNumber(),
+    ll = math
+      .multiply(w * K, RESOLUTION)
+      .to("feet")
+      .toNumber(),
+    aa = ww * ll;
+
+  let nrRows = $("table#cuts tr").length - 1,
+    innerHTML =
+      `<td>${i}</td>` +
+      `<td>${x.toFixed(2)}, ${y.toFixed(2)}, ` +
+      `${w.toFixed(2)}, ${h.toFixed(2)}</td>` +
+      `<td>${ww.toFixed(2)}</td>` +
+      `<td>${ll.toFixed(2)}</td>` +
+      `<td>${aa.toFixed(2)}</td>`;
+
+  if (nrRows < cutShapes.length) {
+    var row = $("table#cuts")[0].insertRow();
+    row.dataset.id = i;
+    row.innerHTML = innerHTML;
+  } else {
+    var row = $(`table#cuts tr[data-id=${i}]`);
+    row.html(innerHTML);
   }
+}
 
-  function updateCutsTable(cut) {
-    let i = cut.attr("index");
-    let x = cut.attr("x"),
-      y = cut.attr("y"),
-      w = cut.attr("width"),
-      h = cut.attr("height");
-    let ww = math
-        .multiply(h * K, RESOLUTION)
-        .to("inch")
-        .toNumber(),
-      ll = math
-        .multiply(w * K, RESOLUTION)
-        .to("feet")
-        .toNumber(),
-      aa = ww * ll;
+function updateTotalCuttingUnits(cuts) {
+  let totalCuttingUnits = cuts.map(getCuttingUnits).reduce((a, b) => a + b, 0);
+  $("#total-cutting-units").text(totalCuttingUnits.toFixed(2));
+}
+function getMousePosition(event) {
+  var CTM = CANVAS.node.getScreenCTM();
+  return {
+    x: (event.clientX - CTM.e) / CTM.a,
+    y: (event.clientY - CTM.f) / CTM.d,
+  };
+}
 
-    let nrRows = $("table#cuts tr").length - 1,
-      innerHTML =
-        `<td>${i}</td>` +
-        `<td>${x.toFixed(2)}, ${y.toFixed(2)}, ${w.toFixed(2)}, ${h.toFixed(
-          2
-        )}</td>` +
-        `<td>${ww.toFixed(2)}</td>` +
-        `<td>${ll.toFixed(2)}</td>` +
-        `<td>${aa.toFixed(2)}</td>`;
+function isNearBorder(rect, coord, dir) {
+  if (dir == "x") {
+    var r = rect.x() + rect.width();
+    var c = coord.x;
+  } else if (dir == "y") {
+    var r = rect.y() + rect.height();
+    var c = coord.y;
+  } else {
+    return false;
+  }
+  return r - δ < c && c <= r;
+}
 
-    if (nrRows < cutShapes.length) {
-      var row = $("table#cuts")[0].insertRow();
-      row.dataset.id = i;
-      row.innerHTML = innerHTML;
+CANVAS.on("mousedown", (event) => {
+  if (event.target.getAttribute("type") == "cut") {
+    let i = event.target.getAttribute("index");
+    let coord = getMousePosition(event);
+    selectedCut = cutShapes[i];
+    selectedIndex = parseInt(i);
+    offset.x = coord.x - selectedCut.x();
+    offset.y = coord.y - selectedCut.y();
+    console.log("click", event.offsetX, event.layerX);
+    if (isNearBorder(selectedCut, coord, "x")) {
+      actionType = "resize-x";
+    } else if (isNearBorder(selectedCut, coord, "y")) {
+      actionType = "resize-y";
     } else {
-      var row = $(`table#cuts tr[data-id=${i}]`);
-      row.html(innerHTML);
+      actionType = "drag";
     }
   }
+});
 
-  function updateTotalCuttingUnits(cuts) {
-    let totalCuttingUnits = cuts
-      .map(getCuttingUnits)
-      .reduce((a, b) => a + b, 0);
-    $("#total-cutting-units").text(totalCuttingUnits.toFixed(2));
+function constrainInBoard(cut, corner) {
+  return {
+    x: clamp(corner.x, 0, boardShape.width() - cut.width()),
+    y: clamp(corner.y, 0, boardShape.height() - cut.height()),
+  };
+}
+
+function intersects(x1, x2, y1, y2) {
+  return x1 <= y2 && y1 <= x2;
+}
+
+function intersectsShape(shape1, shape2, axis) {
+  if (axis == "x") {
+    return intersects(
+      shape1.x(),
+      shape1.x() + shape1.width(),
+      shape2.x(),
+      shape2.x() + shape2.width()
+    );
+  } else if (axis == "y") {
+    return intersects(
+      shape1.y(),
+      shape1.y() + shape1.height(),
+      shape2.y(),
+      shape2.y() + shape2.height()
+    );
+  } else {
+    console.assert(false, "unknown axis");
   }
+}
+
+CANVAS.on("mousemove", (event) => {
+  if (selectedCut) {
+    let coord = getMousePosition(event);
+    if (actionType == "drag") {
+      var corner = { x: coord.x - offset.x, y: coord.y - offset.y };
+      corner = constrainInBoard(selectedCut, corner);
+      if (corner.x == 0) {
+        console.log("drag", offset);
+      }
+      selectedCut.attr({ x: corner.x, y: corner.y });
+    } else if (actionType == "resize-x") {
+      var otherShapes = defectShapes.concat(
+        cutShapes.slice(0, selectedIndex),
+        cutShapes.slice(selectedIndex + 1)
+      );
+      var validOtherShapes = otherShapes.filter(
+        (shape) =>
+          intersectsShape(shape, selectedCut, "y") &&
+          shape.x() > selectedCut.x()
+      );
+      var xs = validOtherShapes.map((shape) => shape.x());
+      var xMax = Math.min(boardShape.width(), ...xs);
+      var x = clamp(coord.x, selectedCut.x(), xMax);
+      selectedCut.width(x - selectedCut.x());
+    } else if (actionType == "resize-y") {
+      var otherShapes = defectShapes.concat(
+        cutShapes.slice(0, selectedIndex),
+        cutShapes.slice(selectedIndex + 1)
+      );
+      var validOtherShapes = otherShapes.filter(
+        (shape) =>
+          intersectsShape(shape, selectedCut, "x") &&
+          shape.y() > selectedCut.y()
+      );
+      var ys = validOtherShapes.map((shape) => shape.y());
+      var yMax = Math.min(boardShape.height(), ...ys);
+      var y = clamp(coord.y, selectedCut.y(), yMax);
+      selectedCut.height(y - selectedCut.y());
+    } else {
+      assert(false, "unknown action type");
+    }
+    updateCutsTable(selectedCut);
+  }
+});
+
+CANVAS.on("mousemove", (event) => {
+  let coord = getMousePosition(event);
+  let isCut = event.target.getAttribute("type") == "cut",
+    i = event.target.getAttribute("index");
+  if (isCut && isNearBorder(cutShapes[i], coord, "x")) {
+    event.target.style.cursor = "ew-resize";
+  } else if (isCut && isNearBorder(cutShapes[i], coord, "y")) {
+    event.target.style.cursor = "ns-resize";
+  } else {
+    event.target.style.cursor = "default";
+  }
+});
+
+CANVAS.on("mouseup mouseleave", (event) => {
+  if (selectedCut) {
+    selectedCut = null;
+    selectedIndex = null;
+  }
+});
+
+$("#add-cut").on("click", () => {
+  var cutShape = CANVAS.rect({
+    x: DEFAULT_CUT.left,
+    y: DEFAULT_CUT.top,
+    width: DEFAULT_CUT.width,
+    height: DEFAULT_CUT.height,
+    fill: COLORS.cut,
+    index: index,
+    type: "cut",
+  });
+  cutShapes.push(cutShape);
+  updateCutsTable(cutShape);
+  updateTotalCuttingUnits(cutShapes);
+  index += 1;
+});
+
+function main(board, defects) {
+  index = 0;
+  defectShapes = [];
+  cutShapes = [];
 
   CANVAS.clear();
   CANVAS.size(board.right / K + 10, board.bottom / K + 10);
+
+  $("table#cuts tr").slice(1).empty();
 
   let p = { notation: "fixed", precision: 2 },
     boardWidth = math.multiply(board.right, RESOLUTION).to("feet"),
@@ -140,13 +304,8 @@ function main(board, defects) {
 
   $("#sm").text(getSM(board));
 
-  var index = 0;
-  var defectShapes = [];
-  var cutShapes = [];
-
-  var boardShape = drawBox(CANVAS, board);
+  boardShape = drawBox(CANVAS, board);
   boardShape.attr({ fill: COLORS.board });
-
   CANVAS.add(boardShape);
 
   for (defect of defects) {
@@ -154,159 +313,6 @@ function main(board, defects) {
     defectShape.attr({ fill: COLORS.defect });
     defectShapes.push(defectShape);
   }
-
-  var actionType = null,
-    selectedCut = null,
-    selectedIndex = null;
-  var offset = { x: 0, y: 0 };
-
-  $("#add-cut").on("click", () => {
-    var cutShape = CANVAS.rect({
-      x: DEFAULT_CUT.left,
-      y: DEFAULT_CUT.top,
-      width: DEFAULT_CUT.width,
-      height: DEFAULT_CUT.height,
-      fill: COLORS.cut,
-      index: index,
-      type: "cut",
-    });
-    cutShapes.push(cutShape);
-    updateCutsTable(cutShape);
-    updateTotalCuttingUnits(cutShapes);
-    index += 1;
-  });
-
-  function getMousePosition(event) {
-    var CTM = CANVAS.node.getScreenCTM();
-    return {
-      x: (event.clientX - CTM.e) / CTM.a,
-      y: (event.clientY - CTM.f) / CTM.d,
-    };
-  }
-
-  function isNearBorder(rect, coord, dir) {
-    if (dir == "x") {
-      var r = rect.x() + rect.width();
-      var c = coord.x;
-    } else if (dir == "y") {
-      var r = rect.y() + rect.height();
-      var c = coord.y;
-    } else {
-      return false;
-    }
-    return r - δ < c && c <= r;
-  }
-
-  CANVAS.on("mousedown", (event) => {
-    if (event.target.getAttribute("type") == "cut") {
-      let i = event.target.getAttribute("index");
-      let coord = getMousePosition(event);
-      selectedCut = cutShapes[i];
-      selectedIndex = parseInt(i);
-      offset.x = event.offsetX;
-      offset.y = event.offsetY;
-      if (isNearBorder(selectedCut, coord, "x")) {
-        actionType = "resize-x";
-      } else if (isNearBorder(selectedCut, coord, "y")) {
-        actionType = "resize-y";
-      } else {
-        actionType = "drag";
-      }
-    }
-  });
-
-  function constrainInBoard(cut, corner) {
-    return {
-      x: clamp(corner.x, 0, boardShape.width() - cut.width()),
-      y: clamp(corner.y, 0, boardShape.height() - cut.height()),
-    };
-  }
-
-  function intersects(x1, x2, y1, y2) {
-    return x1 <= y2 && y1 <= x2;
-  }
-
-  function intersectsShape(shape1, shape2, axis) {
-    if (axis == "x") {
-      return intersects(
-        shape1.x(),
-        shape1.x() + shape1.width(),
-        shape2.x(),
-        shape2.x() + shape2.width()
-      );
-    } else if (axis == "y") {
-      return intersects(
-        shape1.y(),
-        shape1.y() + shape1.height(),
-        shape2.y(),
-        shape2.y() + shape2.height()
-      );
-    } else {
-      console.assert(false, "unknown axis");
-    }
-  }
-
-  CANVAS.on("mousemove", (event) => {
-    if (selectedCut) {
-      let coord = getMousePosition(event);
-      if (actionType == "drag") {
-        var corner = { x: coord.x - offset.x, y: coord.y - offset.y };
-        corner = constrainInBoard(selectedCut, corner);
-        selectedCut.attr({ x: corner.x, y: corner.y });
-      } else if (actionType == "resize-x") {
-        var otherShapes = defectShapes.concat(
-          cutShapes.slice(0, selectedIndex),
-          cutShapes.slice(selectedIndex + 1)
-        );
-        var validOtherShapes = otherShapes.filter(
-          (shape) =>
-            intersectsShape(shape, selectedCut, "y") &&
-            shape.x() > selectedCut.x()
-        );
-        var xs = validOtherShapes.map((shape) => shape.x());
-        var xMax = Math.min(boardShape.width(), ...xs);
-        var x = clamp(coord.x, selectedCut.x(), xMax);
-        selectedCut.width(x - selectedCut.x());
-      } else if (actionType == "resize-y") {
-        var otherShapes = defectShapes.concat(
-          cutShapes.slice(0, selectedIndex),
-          cutShapes.slice(selectedIndex + 1)
-        );
-        var validOtherShapes = otherShapes.filter(
-          (shape) =>
-            intersectsShape(shape, selectedCut, "x") &&
-            shape.y() > selectedCut.y()
-        );
-        var ys = validOtherShapes.map((shape) => shape.y());
-        var yMax = Math.min(boardShape.height(), ...ys);
-        var y = clamp(coord.y, selectedCut.y(), yMax);
-        selectedCut.height(y - selectedCut.y());
-      } else {
-        assert(false, "unknown action type");
-      }
-      updateCutsTable(selectedCut);
-    }
-  });
-
-  CANVAS.on("mousemove", (event) => {
-    let coord = getMousePosition(event);
-    let isCut = event.target.getAttribute("type") == "cut",
-      i = event.target.getAttribute("index");
-    if (isCut && isNearBorder(cutShapes[i], coord, "x")) {
-      event.target.style.cursor = "ew-resize";
-    } else if (isCut && isNearBorder(cutShapes[i], coord, "y")) {
-      event.target.style.cursor = "ns-resize";
-    } else {
-      event.target.style.cursor = "default";
-    }
-  });
-
-  CANVAS.on("mouseup mouseleave", (event) => {
-    if (selectedCut) {
-      selectedCut = null;
-      selectedIndex = null;
-    }
-  });
 }
 
 function updateGradeInfo(grade, board) {
