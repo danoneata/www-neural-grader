@@ -7,29 +7,43 @@
       integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
       crossorigin="anonymous"
     ></script>
-    <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js"></script>
     <script src="https://pagecdn.io/lib/mathjs/7.1.0/math.min.js"></script>
-    <!--<script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.select.min.js"></script>-->
+    <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js"></script>
+    <!--<script src="svg.select.js/src/svg.select.js"></script>-->
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.2.0/fabric.min.js"></script>-->
   </head>
   <body>
     <p>
-      This is an interactive application for grading. We are showing a board
-      with defects; your goal is to add cuts to yield the necessary cutting
-      units and achieve the desired grade.
+      This is an interactive application for wood grading reflecting the NHLA
+      rules. We are showing a board with defects; your goal is to add cuts to
+      yield the necessary cutting units and achieve the desired grade.
     </p>
-    <div id="canvas"></div>
     <p>
-      Interactive mode:
-      <select id="mode">
-        <option value="add-cut" selected="selected">add cut</option>
-        <option value="edit">edit</option>
+      board:
+      <select id="board-name">
+        <option>0382</option>
       </select>
-      <span
-        id="mode-help"
-        style="color: gray; font-style: italic; margin-left: 5px"
-        >add cuts on the board by dragging rectangles</span
-      >
+      side:
+      <select id="side">
+        <option value="front">front</option>
+        <option value="back">back</option>
+      </select>
+      board size: <span id="board-size"></span>
+      <span style="margin-left: 5px">SM: <span id="sm"></span></span>
     </p>
+    <p>
+      grade:
+      <select id="grade">
+        <option value="FAS">FAS</option>
+        <option value="No1COM">#1COM</option>
+      </select>
+      minimum board size:
+      <span id="minimum-board-size"></span>
+      required cutting units:
+      <span id="required-cutting-units"></span></p>
+    </p>
+    <p><button id="add-cut">Add cut</button></p>
+    <div id="svg-canvas"></div>
     <div>
       <table id="cuts" border="1">
         <thead>
@@ -42,7 +56,6 @@
         <tbody></tbody>
       </table>
       <p>Total cutting units: <span id="total-cutting-units">0</span></p>
-      <p>Required cutting units: <span id="required-cutting-units"></span></p>
     </div>
   </body>
   <script type="text/javascript" src="main.js"></script>
