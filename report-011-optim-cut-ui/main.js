@@ -5,6 +5,7 @@
 // [x] Update existing cut
 // [x] Constrain at board limits
 // [x] Boundaries when resizing
+// [x] Select grade
 // [ ] Bounderies when moving
 // [ ] Show overlaps
 // [ ] Snap cut to defects and other cuts
@@ -12,7 +13,6 @@
 // [ ] Slightly different colors for cuts
 // [ ] Load board
 // [ ] Minimum cut size
-// [ ] Select grade
 // [ ] Show board information: name, size, surface measure
 // [ ] Show grade information: name, minumum board size, minimum cut size, required cutting units, number of cuts
 
@@ -162,7 +162,6 @@ CANVAS.on("mousedown", (event) => {
     selectedIndex = parseInt(i);
     offset.x = coord.x - selectedCut.x();
     offset.y = coord.y - selectedCut.y();
-    console.log("click", event.offsetX, event.layerX);
     if (isNearBorder(selectedCut, coord, "x")) {
       actionType = "resize-x";
     } else if (isNearBorder(selectedCut, coord, "y")) {
@@ -210,9 +209,6 @@ CANVAS.on("mousemove", (event) => {
     if (actionType == "drag") {
       var corner = { x: coord.x - offset.x, y: coord.y - offset.y };
       corner = constrainInBoard(selectedCut, corner);
-      if (corner.x == 0) {
-        console.log("drag", offset);
-      }
       selectedCut.attr({ x: corner.x, y: corner.y });
     } else if (actionType == "resize-x") {
       var otherShapes = defectShapes.concat(
@@ -246,6 +242,7 @@ CANVAS.on("mousemove", (event) => {
       assert(false, "unknown action type");
     }
     updateCutsTable(selectedCut);
+    updateTotalCuttingUnits(cutShapes);
   }
 });
 

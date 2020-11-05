@@ -9,53 +9,105 @@
     ></script>
     <script src="https://pagecdn.io/lib/mathjs/7.1.0/math.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
+      integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
+      crossorigin="anonymous"
+    ></script>
     <!--<script src="svg.select.js/src/svg.select.js"></script>-->
     <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.2.0/fabric.min.js"></script>-->
   </head>
   <body>
-    <p>
-      This is an interactive application for wood grading reflecting the NHLA
-      rules. We are showing a board with defects; your goal is to add cuts to
-      yield the necessary cutting units and achieve the desired grade.
-    </p>
-    <p>
-      board:
-      <select id="board-name">
-        <option>0382</option>
-      </select>
-      side:
-      <select id="side">
-        <option value="front">front</option>
-        <option value="back">back</option>
-      </select>
-      board size: <span id="board-size"></span>
-      <span style="margin-left: 5px">SM: <span id="sm"></span></span>
-    </p>
-    <p>
-      grade:
-      <select id="grade">
-        <option value="FAS">FAS</option>
-        <option value="No1COM">#1COM</option>
-      </select>
-      minimum board size:
-      <span id="minimum-board-size"></span>
-      required cutting units:
-      <span id="required-cutting-units"></span></p>
-    </p>
-    <p><button id="add-cut">Add cut</button></p>
-    <div id="svg-canvas"></div>
-    <div>
-      <table id="cuts" border="1">
-        <thead>
-          <th>id</th>
-          <th>(x, y, w, h)</th>
-          <th>width (in)</th>
-          <th>length (ft)</th>
-          <th>cutting units</th>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <p>Total cutting units: <span id="total-cutting-units">0</span></p>
+    <div class="container">
+      <h1 class="mt-2">NHLA Grading Tool</h1>
+      <p>
+        This is an interactive application for wood grading reflecting the NHLA
+        rules. We are showing a board with defects; your goal is to add cuts to
+        yield the necessary cutting units and achieve the desired grade.
+      </p>
+      <div class="my-2" id="svg-canvas"></div>
+      <div class="row">
+        <div class="col-sm-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Board</h5>
+              <div class="card-text">
+                <form class="form-inline">
+                  <label class="my-1 mr-2" for="board-name">name</label>
+                  <select id="board-name" class="custom-select">
+                    <option>0382</option>
+                  </select>
+                  <label class="my-1 mx-2" for="side">side</label>
+                  <select id="side" class="custom-select">
+                    <option selected value="front">front</option>
+                    <option value="back">back</option>
+                  </select>
+                </form>
+              </div>
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item">
+                board size: <span id="board-size"></span>
+              </li>
+              <li class="list-group-item">SM: <span id="sm"></span></li>
+            </ul>
+          </div>
+          <div class="card mt-4">
+            <div class="card-body">
+              <h5 class="card-title">Grade</h5>
+              <div class="card-text">
+                <form class="form-inline">
+                  <label class="my-1 mr-2" for="grade">grade</label>
+                  <select id="grade" class="custom-select">
+                    <option selected value="FAS">FAS</option>
+                    <option value="No1COM">#1COM</option>
+                  </select>
+                </form>
+              </div>
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item">
+                minimum board size: <span id="minimum-board-size"></span>
+              </li>
+              <li class="list-group-item">
+                required cutting units:
+                <span id="required-cutting-units"></span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Cuts</h5>
+              <div class="card-text">
+                <button class="my-1 btn btn-primary" id="add-cut">
+                  Add cut
+                </button>
+                <table id="cuts" class="table table-sm">
+                  <thead>
+                    <th>id</th>
+                    <th>(x, y, w, h)</th>
+                    <th>width (in)</th>
+                    <th>length (ft)</th>
+                    <th>cutting units</th>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+                <p>
+                  Total cutting units: <span id="total-cutting-units">0</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </body>
   <script type="text/javascript" src="main.js"></script>
