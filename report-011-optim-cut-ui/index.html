@@ -45,7 +45,7 @@
                   </select>
                   <label class="my-1 mx-2" for="side">side</label>
                   <select id="side" class="custom-select">
-                    <option selected value="front">front</option>
+                    <option value="front" selected>front</option>
                     <option value="back">back</option>
                   </select>
                 </form>
@@ -55,17 +55,17 @@
               <li class="list-group-item">
                 board size: <span id="board-size"></span>
               </li>
-              <li class="list-group-item">SM: <span id="sm"></span></li>
+              <li class="list-group-item">surface measurei (SM): <span id="sm"></span></li>
             </ul>
           </div>
-          <div class="card mt-4">
+          <div class="card my-4">
             <div class="card-body">
               <h5 class="card-title">Grade</h5>
               <div class="card-text">
                 <form class="form-inline">
                   <label class="my-1 mr-2" for="grade">grade</label>
                   <select id="grade" class="custom-select">
-                    <option selected value="FAS">FAS</option>
+                    <option value="FAS" selected>FAS</option>
                     <option value="No1COM">#1COM</option>
                   </select>
                 </form>
@@ -73,11 +73,19 @@
             </div>
             <ul class="list-group list-group-flush">
               <li class="list-group-item">
-                minimum board size: <span id="minimum-board-size"></span>
+                min. board size: <span id="min-board-size"></span>
+              </li>
+              <li class="list-group-item">
+                min. cut size:
+                <span id="min-cut-sizes"></span>
               </li>
               <li class="list-group-item">
                 required cutting units:
                 <span id="required-cutting-units"></span>
+              </li>
+              <li class="list-group-item">
+                num. of cuts:
+                <span id="num-cuts"></span>
               </li>
             </ul>
           </div>
@@ -93,15 +101,15 @@
                 <table id="cuts" class="table table-sm">
                   <thead>
                     <th>id</th>
-                    <th>(x, y, w, h)</th>
+                    <th>rect.</th>
                     <th>width (in)</th>
                     <th>length (ft)</th>
-                    <th>cutting units</th>
+                    <th>cut units</th>
                   </thead>
                   <tbody></tbody>
                 </table>
                 <p>
-                  Total cutting units: <span id="total-cutting-units">0</span>
+                  total cutting units: <span id="total-cutting-units">0</span>
                 </p>
               </div>
             </div>

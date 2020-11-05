@@ -6,15 +6,30 @@
 // [x] Constrain at board limits
 // [x] Boundaries when resizing
 // [x] Select grade
-// [ ] Bounderies when moving
-// [ ] Show overlaps
-// [ ] Snap cut to defects and other cuts
+// [x] Warn on small cuts
+// [x] Show board information:
+//     [x] name
+//     [x] size
+//     [x] surface measure
+// [ ] Show grade information:
+//     [x] name
+//     [x] minumum board size
+//     [x] required cutting units
+//     [x] number of cuts
+//     [x] minimum cut size
+//     [ ] extra cut
+// [-] Bounderies when moving: Abandoned as it's too dificult
+// [ ] Load boards from JSON
+// [ ] Allow left and top resize as well
+// [ ] Snap cut to minimum size
+// [ ] Show overlaps (better, do not allow overlaps)
 // [ ] Delete existing cut
 // [ ] Slightly different colors for cuts
-// [ ] Load board
-// [ ] Minimum cut size
-// [ ] Show board information: name, size, surface measure
-// [ ] Show grade information: name, minumum board size, minimum cut size, required cutting units, number of cuts
+// [ ] Improve help messages:
+//     [ ] how to edit cuts
+//     [ ] what do the color code mean
+// [ ] Allow for board resize
+// [ ] Add cut as maximum rectangle
 
 const δ = 15;
 const K = 1.5;
@@ -28,18 +43,40 @@ const COLORS = {
 };
 const GRADES = {
   FAS: {
-    minimumBoardSize: {
+    minBoardSize: {
       height: math.unit(6, "inch"),
       width: math.unit(8, "feet"),
     },
+    minCutSizes: [
+      {
+        height: math.unit(4, "inch"),
+        width: math.unit(5, "feet"),
+      },
+      {
+        height: math.unit(3, "inch"),
+        width: math.unit(7, "feet"),
+      },
+    ],
     yieldFactor: 10,
+    getNumCuts: (sm) => Math.min(Math.max(Math.floor(sm / 4.0), 1), 4),
   },
   No1COM: {
-    minimumBoardSize: {
+    minBoardSize: {
       height: math.unit(3, "inch"),
       width: math.unit(4, "feet"),
     },
+    minCutSizes: [
+      {
+        height: math.unit(4, "inch"),
+        width: math.unit(2, "feet"),
+      },
+      {
+        height: math.unit(3, "inch"),
+        width: math.unit(3, "feet"),
+      },
+    ],
     yieldFactor: 8,
+    getNumCuts: (sm) => Math.min(Math.max(Math.floor((sm + 1) / 3.0), 1), 5),
   },
 };
 
@@ -77,21 +114,33 @@ var index = 0,
   defectShapes = [],
   cutShapes = [];
 
+var boardSide = null,
+  grade = null;
+
 var actionType = null,
   selectedCut = null,
   selectedIndex = null;
 var offset = { x: 0, y: 0 };
 
+function cutToSize(cut) {
+  return {
+    height: math.multiply(cut.height() * K, RESOLUTION).to("inch"),
+    width: math.multiply(cut.width() * K, RESOLUTION).to("feet"),
+  };
+}
+
 function getCuttingUnits(cut) {
-  let ww = math
-      .multiply(cut.height() * K, RESOLUTION)
-      .to("inch")
-      .toNumber(),
-    ll = math
-      .multiply(cut.width() * K, RESOLUTION)
-      .to("feet")
-      .toNumber();
-  return ww * ll;
+  let size = cutToSize(cut);
+  return size.height.to("inch").toNumber() * size.width.to("feet").toNumber();
+}
+
+function hasMinSize(cut) {
+  cutSize = cutToSize(cut);
+  return GRADES[grade].minCutSizes.some(
+    (minCutSize) =>
+      math.smallerEq(minCutSize.height, cutSize.height) &&
+      math.smallerEq(minCutSize.width, cutSize.width)
+  );
 }
 
 function updateCutsTable(cut) {
@@ -113,8 +162,8 @@ function updateCutsTable(cut) {
   let nrRows = $("table#cuts tr").length - 1,
     innerHTML =
       `<td>${i}</td>` +
-      `<td>${x.toFixed(2)}, ${y.toFixed(2)}, ` +
-      `${w.toFixed(2)}, ${h.toFixed(2)}</td>` +
+      `<td>${x.toFixed(0)}, ${y.toFixed(0)}, ` +
+      `${w.toFixed(0)}, ${h.toFixed(0)}</td>` +
       `<td>${ww.toFixed(2)}</td>` +
       `<td>${ll.toFixed(2)}</td>` +
       `<td>${aa.toFixed(2)}</td>`;
@@ -124,8 +173,14 @@ function updateCutsTable(cut) {
     row.dataset.id = i;
     row.innerHTML = innerHTML;
   } else {
-    var row = $(`table#cuts tr[data-id=${i}]`);
-    row.html(innerHTML);
+    var row = $(`table#cuts tr[data-id=${i}]`)[0];
+    row.innerHTML = innerHTML;
+  }
+
+  if (hasMinSize(cut)) {
+    row.className = "";
+  } else {
+    row.className = "table-warning";
   }
 }
 
@@ -180,7 +235,7 @@ function constrainInBoard(cut, corner) {
 }
 
 function intersects(x1, x2, y1, y2) {
-  return x1 <= y2 && y1 <= x2;
+  return x1 < y2 && y1 < x2;
 }
 
 function intersectsShape(shape1, shape2, axis) {
@@ -205,9 +260,33 @@ function intersectsShape(shape1, shape2, axis) {
 
 CANVAS.on("mousemove", (event) => {
   if (selectedCut) {
-    let coord = getMousePosition(event);
+    let coord = getMousePosition(event),
+      width = selectedCut.width(),
+      height = selectedCut.height();
     if (actionType == "drag") {
-      var corner = { x: coord.x - offset.x, y: coord.y - offset.y };
+      let corner = { x: coord.x - offset.x, y: coord.y - offset.y },
+        otherShapes = defectShapes.concat(
+          cutShapes.slice(0, selectedIndex),
+          cutShapes.slice(selectedIndex + 1)
+        ),
+        xs = otherShapes.map((s) => [s.x(), s.x() + s.width()]).flat(),
+        ys = otherShapes.map((s) => [s.y(), s.y() + s.height()]).flat();
+      for (x of xs) {
+        if (Math.abs(x - corner.x) <= 5) {
+          corner.x = x;
+        }
+        if (Math.abs(x - (corner.x + width)) <= 5) {
+          corner.x = x - width;
+        }
+      }
+      for (y of ys) {
+        if (Math.abs(y - corner.y) <= 5) {
+          corner.y = y;
+        }
+        if (Math.abs(y - (corner.y + height)) <= 5) {
+          corner.y = y - height;
+        }
+      }
       corner = constrainInBoard(selectedCut, corner);
       selectedCut.attr({ x: corner.x, y: corner.y });
     } else if (actionType == "resize-x") {
@@ -292,12 +371,11 @@ function main(board, defects) {
 
   $("table#cuts tr").slice(1).empty();
 
-  let p = { notation: "fixed", precision: 2 },
-    boardWidth = math.multiply(board.right, RESOLUTION).to("feet"),
-    boardWidthStr = boardWidth.format(p),
-    boardHeight = math.multiply(board.bottom, RESOLUTION).to("inch"),
-    boardHeightStr = boardHeight.format(p);
-  $("#board-size").text(`${boardHeightStr} × ${boardWidthStr}`);
+  let boardSize = {
+    width: math.multiply(board.right, RESOLUTION).to("feet"),
+    height: math.multiply(board.bottom, RESOLUTION).to("inch"),
+  };
+  $("#board-size").text(sizeToStr(boardSize, 2));
 
   $("#sm").text(getSM(board));
 
@@ -312,22 +390,34 @@ function main(board, defects) {
   }
 }
 
-function updateGradeInfo(grade, board) {
-  let p = { notation: "fixed", precision: 2 },
-    heightStr = GRADES[grade].minimumBoardSize.height.format(p),
-    widthStr = GRADES[grade].minimumBoardSize.width.format(p);
-  $("#minimum-board-size").text(`${heightStr} × ${widthStr}`);
-  let sm = getSM(board);
-  $("#required-cutting-units").text(sm * GRADES[grade].yieldFactor);
+function sizeToStr(size, precision = 0) {
+  let p = { notation: "fixed", precision: precision },
+    heightStr = size.height.format(p),
+    widthStr = size.width.format(p);
+  return `${heightStr} × ${widthStr}`;
 }
 
-main(BOARD, $("select#side")[0].value);
-updateGradeInfo($("select#grade")[0].value, BOARD);
+function updateGradeInfo(grade, board) {
+  $("#min-board-size").text(sizeToStr(GRADES[grade].minBoardSize));
+  $("#min-cut-sizes").text(
+    GRADES[grade].minCutSizes.map((size) => sizeToStr(size)).join(" or ")
+  );
+  let sm = getSM(board);
+  $("#required-cutting-units").text(sm * GRADES[grade].yieldFactor);
+  $("#num-cuts").text(GRADES[grade].getNumCuts(sm));
+}
 
 $("select#side").on("change", (event) => {
   main(BOARD, defects[event.target.value]);
 });
 
 $("select#grade").on("change", (event) => {
-  updateGradeInfo(event.target.value, BOARD);
+  grade = event.target.value;
+  updateGradeInfo(grade, BOARD);
+});
+
+$(document).ready(() => {
+  (boardSide = $("select#side")[0].value), (grade = $("select#grade")[0].value);
+  main(BOARD, defects[boardSide]);
+  updateGradeInfo(grade, BOARD);
 });
