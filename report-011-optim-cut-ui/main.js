@@ -31,7 +31,29 @@ const GRADES = {
       },
     ],
     yieldFactor: 10,
+    yieldFactorExtra: 11,
     getNumCuts: (sm) => Math.min(Math.max(Math.floor(sm / 4.0), 1), 4),
+    allowsExtraCut: (sm) => 6 <= sm && sm <= 15,
+  },
+  FASSEL: {
+    minBoardSize: {
+      height: math.unit(4, "inch"),
+      width: math.unit(6, "feet"),
+    },
+    minCutSizes: [
+      {
+        height: math.unit(4, "inch"),
+        width: math.unit(5, "feet"),
+      },
+      {
+        height: math.unit(3, "inch"),
+        width: math.unit(7, "feet"),
+      },
+    ],
+    yieldFactor: 10,
+    yieldFactorExtra: 11,
+    getNumCuts: (sm) => Math.min(Math.max(Math.floor(sm / 4.0), 1), 4),
+    allowsExtraCut: (sm) => 6 <= sm && sm <= 15,
   },
   No1COM: {
     minBoardSize: {
@@ -49,7 +71,41 @@ const GRADES = {
       },
     ],
     yieldFactor: 8,
+    yieldFactorExtra: 9,
     getNumCuts: (sm) => Math.min(Math.max(Math.floor((sm + 1) / 3.0), 1), 5),
+    allowsExtraCut: (sm) => 3 <= sm && sm <= 10,
+  },
+  No2ACOM: {
+    minBoardSize: {
+      height: math.unit(3, "inch"),
+      width: math.unit(4, "feet"),
+    },
+    minCutSizes: [
+      {
+        height: math.unit(3, "inch"),
+        width: math.unit(2, "feet"),
+      },
+    ],
+    yieldFactor: 6,
+    yieldFactorExtra: 8,
+    getNumCuts: (sm) => Math.min(Math.max(Math.floor(sm / 2.0), 1), 7),
+    allowsExtraCut: (sm) => 2 <= sm && 7 <= sm,
+  },
+  No3ACOM: {
+    minBoardSize: {
+      height: math.unit(3, "inch"),
+      width: math.unit(4, "feet"),
+    },
+    minCutSizes: [
+      {
+        height: math.unit(3, "inch"),
+        width: math.unit(2, "feet"),
+      },
+    ],
+    yieldFactor: 4,
+    yieldFactorExtra: null,
+    getNumCuts: (sm) => Infinity,
+    allowsExtraCut: (sm) => false,
   },
 };
 
@@ -294,7 +350,6 @@ CANVAS.on("mousemove", (event) => {
         .map((shape) => shape.x() + shape.width());
       const xMin = Math.max(boardShape.x(), ...xs);
       const x = clamp(coord.x, xMin, right - 1);
-      console.log(xMin);
       selectedCut.x(x);
       selectedCut.width(right - x);
     } else if (actionType === "resize-top") {
@@ -440,8 +495,16 @@ function updateGradeInfo(grade, board) {
     GRADES[grade].minCutSizes.map((size) => sizeToStr(size)).join(" or ")
   );
   const sm = getSM(board);
-  $("#required-cutting-units").text(sm * GRADES[grade].yieldFactor);
-  $("#num-cuts").text(GRADES[grade].getNumCuts(sm));
+  const reqCuttingUnits = sm * GRADES[grade].yieldFactor;
+  const numCuts = GRADES[grade].getNumCuts(sm);
+  const allowsExtraCut = GRADES[grade].allowsExtraCut(sm);
+  const suffix = numCuts > 1 ? "s" : "";
+  let text = `${reqCuttingUnits} in ${numCuts} cut${suffix}`;
+  if (allowsExtraCut) {
+    const reqCuttingUnitsExtra = sm * GRADES[grade].yieldFactorExtra;
+    text = text + ` or ${reqCuttingUnitsExtra} in ${numCuts + 1} cuts`;
+  }
+  $("#required-cutting-units").text(text);
 }
 
 function populateBoardNamesSelect(boardNames) {
@@ -458,7 +521,6 @@ function getBoardId(boardName) {
 $("select#board-name").on("change", (event) => {
   boardName = event.target.value;
   boardId = getBoardId(boardName);
-  console.log(boardName, boardId);
   updateGradeInfo(grade, data[boardId].board);
   main(data[boardId].board, data[boardId].defects[boardSide]);
 });
