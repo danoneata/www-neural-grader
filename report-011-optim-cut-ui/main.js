@@ -1,37 +1,10 @@
-// TODO
-// [x] Boundaries: board
-// [x] Allow multiple cuts
-// [x] Show cut info: location, area, has min. size, etc.
-// [x] Update existing cut
-// [x] Constrain at board limits
-// [x] Boundaries when resizing
-// [x] Select grade
-// [x] Warn on small cuts
-// [x] Show board information:
-//     [x] name
-//     [x] size
-//     [x] surface measure
-// [ ] Show grade information:
-//     [x] name
-//     [x] minumum board size
-//     [x] required cutting units
-//     [x] number of cuts
-//     [x] minimum cut size
-//     [ ] extra cut
-// [-] Bounderies when moving: Abandoned as it's too dificult
-// [ ] Load boards from JSON
-// [ ] Allow left and top resize as well
-// [ ] Snap cut to minimum size
-// [ ] Show overlaps (better, do not allow overlaps)
-// [ ] Delete existing cut
-// [ ] Slightly different colors for cuts
-// [ ] Improve help messages:
-//     [ ] how to edit cuts
-//     [ ] what do the color code mean
-// [ ] Allow for board resize
-// [ ] Add cut as maximum rectangle
+/* eslint-env jquery */
+/* global math */
+/* global SVG */
+/* global data */
 
-const δ = 15;
+"use strict";
+
 const K = 1.5;
 const RESOLUTION = math.unit(0.0625, "inch");
 const DEFAULT_CUT = { left: 5, top: 5, width: 100, height: 30 };
@@ -80,47 +53,40 @@ const GRADES = {
   },
 };
 
-var CANVAS = SVG().addTo("#svg-canvas");
+const CANVAS = SVG().addTo("#svg-canvas");
 
 function clamp(number, min, max) {
   return Math.max(min, Math.min(number, max));
 }
 
 function drawBox(canvas, box) {
-  let x = box.left / K;
-  let y = box.top / K;
-  let w = (box.right - box.left) / K;
-  let h = (box.bottom - box.top) / K;
+  const x = box.left / K;
+  const y = box.top / K;
+  const w = (box.right - box.left) / K;
+  const h = (box.bottom - box.top) / K;
   return canvas.rect({ x: x, y: y, width: w, height: h });
 }
 
 function getSM(board) {
-  let boardWidth = math.multiply(board.right, RESOLUTION).to("feet"),
-    boardHeight = math.multiply(board.bottom, RESOLUTION).to("inch");
+  const boardWidth = math.multiply(board.right, RESOLUTION).to("feet");
+  const boardHeight = math.multiply(board.bottom, RESOLUTION).to("inch");
   return Math.round((boardWidth.toNumber() * boardHeight.toNumber()) / 12);
 }
 
-var BOARD = { left: 0, top: 0, right: 1536, bottom: 132 };
-var defects = {
-  front: [
-    { left: 1188.0, top: 0.0, right: 1536.0, bottom: 4.0 },
-    { left: 1320.0, top: 112.0, right: 1536.0, bottom: 132.0 },
-  ],
-  back: [],
-};
+let index = 0;
+let boardShape = null;
+let defectShapes = [];
+let cutShapes = [];
 
-var index = 0,
-  boardShape = null,
-  defectShapes = [],
-  cutShapes = [];
+let boardId = null;
+let boardName = null;
+let boardSide = null;
+let grade = null;
 
-var boardSide = null,
-  grade = null;
-
-var actionType = null,
-  selectedCut = null,
-  selectedIndex = null;
-var offset = { x: 0, y: 0 };
+let actionType = null;
+let selectedCut = null;
+let selectedIndex = null;
+const offset = { x: 0, y: 0 };
 
 function cutToSize(cut) {
   return {
@@ -130,12 +96,12 @@ function cutToSize(cut) {
 }
 
 function getCuttingUnits(cut) {
-  let size = cutToSize(cut);
+  const size = cutToSize(cut);
   return size.height.to("inch").toNumber() * size.width.to("feet").toNumber();
 }
 
 function hasMinSize(cut) {
-  cutSize = cutToSize(cut);
+  const cutSize = cutToSize(cut);
   return GRADES[grade].minCutSizes.some(
     (minCutSize) =>
       math.smallerEq(minCutSize.height, cutSize.height) &&
@@ -144,36 +110,38 @@ function hasMinSize(cut) {
 }
 
 function updateCutsTable(cut) {
-  let i = cut.attr("index");
-  let x = cut.attr("x"),
-    y = cut.attr("y"),
-    w = cut.attr("width"),
-    h = cut.attr("height");
-  let ww = math
-      .multiply(h * K, RESOLUTION)
-      .to("inch")
-      .toNumber(),
-    ll = math
-      .multiply(w * K, RESOLUTION)
-      .to("feet")
-      .toNumber(),
-    aa = ww * ll;
+  const i = cut.attr("index");
+  const x = cut.attr("x");
+  const y = cut.attr("y");
+  const w = cut.attr("width");
+  const h = cut.attr("height");
+  const ww = math
+    .multiply(h * K, RESOLUTION)
+    .to("inch")
+    .toNumber();
+  const ll = math
+    .multiply(w * K, RESOLUTION)
+    .to("feet")
+    .toNumber();
+  const aa = ww * ll;
 
-  let nrRows = $("table#cuts tr").length - 1,
-    innerHTML =
-      `<td>${i}</td>` +
-      `<td>${x.toFixed(0)}, ${y.toFixed(0)}, ` +
-      `${w.toFixed(0)}, ${h.toFixed(0)}</td>` +
-      `<td>${ww.toFixed(2)}</td>` +
-      `<td>${ll.toFixed(2)}</td>` +
-      `<td>${aa.toFixed(2)}</td>`;
+  const nrRows = $("table#cuts tr").length - 1;
+  const innerHTML =
+    `<td>${i}</td>` +
+    `<td>${x.toFixed(0)}, ${y.toFixed(0)}, ` +
+    `${w.toFixed(0)}, ${h.toFixed(0)}</td>` +
+    `<td>${ww.toFixed(2)}</td>` +
+    `<td>${ll.toFixed(2)}</td>` +
+    `<td>${aa.toFixed(2)}</td>`;
+
+  let row;
 
   if (nrRows < cutShapes.length) {
-    var row = $("table#cuts")[0].insertRow();
+    row = $("table#cuts")[0].insertRow();
     row.dataset.id = i;
     row.innerHTML = innerHTML;
   } else {
-    var row = $(`table#cuts tr[data-id=${i}]`)[0];
+    row = $(`table#cuts tr[data-id=${i}]`)[0];
     row.innerHTML = innerHTML;
   }
 
@@ -185,42 +153,59 @@ function updateCutsTable(cut) {
 }
 
 function updateTotalCuttingUnits(cuts) {
-  let totalCuttingUnits = cuts.map(getCuttingUnits).reduce((a, b) => a + b, 0);
+  const totalCuttingUnits = cuts
+    .map(getCuttingUnits)
+    .reduce((a, b) => a + b, 0);
   $("#total-cutting-units").text(totalCuttingUnits.toFixed(2));
 }
 function getMousePosition(event) {
-  var CTM = CANVAS.node.getScreenCTM();
+  const CTM = CANVAS.node.getScreenCTM();
   return {
     x: (event.clientX - CTM.e) / CTM.a,
     y: (event.clientY - CTM.f) / CTM.d,
   };
 }
 
-function isNearBorder(rect, coord, dir) {
-  if (dir == "x") {
-    var r = rect.x() + rect.width();
-    var c = coord.x;
-  } else if (dir == "y") {
-    var r = rect.y() + rect.height();
-    var c = coord.y;
+function isNearBorder(rect, coord, border) {
+  const δ = 5;
+  let r, c;
+  if (border === "left") {
+    r = rect.x();
+    c = coord.x;
+    return r <= c && c < r + δ;
+  } else if (border === "right") {
+    r = rect.x() + rect.width();
+    c = coord.x;
+    return r - δ < c && c <= r;
+  } else if (border === "top") {
+    r = rect.y();
+    c = coord.y;
+    return r <= c && c < r + δ;
+  } else if (border === "bottom") {
+    r = rect.y() + rect.height();
+    c = coord.y;
+    return r - δ < c && c <= r;
   } else {
     return false;
   }
-  return r - δ < c && c <= r;
 }
 
 CANVAS.on("mousedown", (event) => {
-  if (event.target.getAttribute("type") == "cut") {
-    let i = event.target.getAttribute("index");
-    let coord = getMousePosition(event);
+  if (event.target.getAttribute("type") === "cut") {
+    const i = event.target.getAttribute("index");
+    const coord = getMousePosition(event);
     selectedCut = cutShapes[i];
     selectedIndex = parseInt(i);
     offset.x = coord.x - selectedCut.x();
     offset.y = coord.y - selectedCut.y();
-    if (isNearBorder(selectedCut, coord, "x")) {
-      actionType = "resize-x";
-    } else if (isNearBorder(selectedCut, coord, "y")) {
-      actionType = "resize-y";
+    if (isNearBorder(selectedCut, coord, "left")) {
+      actionType = "resize-left";
+    } else if (isNearBorder(selectedCut, coord, "top")) {
+      actionType = "resize-top";
+    } else if (isNearBorder(selectedCut, coord, "right")) {
+      actionType = "resize-right";
+    } else if (isNearBorder(selectedCut, coord, "bottom")) {
+      actionType = "resize-bottom";
     } else {
       actionType = "drag";
     }
@@ -239,14 +224,14 @@ function intersects(x1, x2, y1, y2) {
 }
 
 function intersectsShape(shape1, shape2, axis) {
-  if (axis == "x") {
+  if (axis === "x") {
     return intersects(
       shape1.x(),
       shape1.x() + shape1.width(),
       shape2.x(),
       shape2.x() + shape2.width()
     );
-  } else if (axis == "y") {
+  } else if (axis === "y") {
     return intersects(
       shape1.y(),
       shape1.y() + shape1.height(),
@@ -260,18 +245,24 @@ function intersectsShape(shape1, shape2, axis) {
 
 CANVAS.on("mousemove", (event) => {
   if (selectedCut) {
-    let coord = getMousePosition(event),
-      width = selectedCut.width(),
-      height = selectedCut.height();
-    if (actionType == "drag") {
-      let corner = { x: coord.x - offset.x, y: coord.y - offset.y },
-        otherShapes = defectShapes.concat(
-          cutShapes.slice(0, selectedIndex),
-          cutShapes.slice(selectedIndex + 1)
-        ),
-        xs = otherShapes.map((s) => [s.x(), s.x() + s.width()]).flat(),
-        ys = otherShapes.map((s) => [s.y(), s.y() + s.height()]).flat();
-      for (x of xs) {
+    const coord = getMousePosition(event);
+    const width = selectedCut.width();
+    const height = selectedCut.height();
+
+    const left = selectedCut.x();
+    const top = selectedCut.y();
+    const right = selectedCut.x() + selectedCut.width();
+    const bottom = selectedCut.y() + selectedCut.height();
+
+    if (actionType === "drag") {
+      let corner = { x: coord.x - offset.x, y: coord.y - offset.y };
+      const otherShapes = defectShapes.concat(
+        cutShapes.slice(0, selectedIndex),
+        cutShapes.slice(selectedIndex + 1)
+      );
+      const xs = otherShapes.map((s) => [s.x(), s.x() + s.width()]).flat();
+      const ys = otherShapes.map((s) => [s.y(), s.y() + s.height()]).flat();
+      for (const x of xs) {
         if (Math.abs(x - corner.x) <= 5) {
           corner.x = x;
         }
@@ -279,7 +270,7 @@ CANVAS.on("mousemove", (event) => {
           corner.x = x - width;
         }
       }
-      for (y of ys) {
+      for (const y of ys) {
         if (Math.abs(y - corner.y) <= 5) {
           corner.y = y;
         }
@@ -289,36 +280,71 @@ CANVAS.on("mousemove", (event) => {
       }
       corner = constrainInBoard(selectedCut, corner);
       selectedCut.attr({ x: corner.x, y: corner.y });
-    } else if (actionType == "resize-x") {
-      var otherShapes = defectShapes.concat(
-        cutShapes.slice(0, selectedIndex),
-        cutShapes.slice(selectedIndex + 1)
-      );
-      var validOtherShapes = otherShapes.filter(
-        (shape) =>
-          intersectsShape(shape, selectedCut, "y") &&
-          shape.x() > selectedCut.x()
-      );
-      var xs = validOtherShapes.map((shape) => shape.x());
-      var xMax = Math.min(boardShape.width(), ...xs);
-      var x = clamp(coord.x, selectedCut.x(), xMax);
+    } else if (actionType === "resize-left") {
+      const xs = defectShapes
+        .concat(
+          cutShapes.slice(0, selectedIndex),
+          cutShapes.slice(selectedIndex + 1)
+        )
+        .filter(
+          (shape) =>
+            intersectsShape(shape, selectedCut, "y") &&
+            shape.x() + shape.width() < right
+        )
+        .map((shape) => shape.x() + shape.width());
+      const xMin = Math.max(boardShape.x(), ...xs);
+      const x = clamp(coord.x, xMin, right - 1);
+      console.log(xMin);
+      selectedCut.x(x);
+      selectedCut.width(right - x);
+    } else if (actionType === "resize-top") {
+      const ys = defectShapes
+        .concat(
+          cutShapes.slice(0, selectedIndex),
+          cutShapes.slice(selectedIndex + 1)
+        )
+        .filter(
+          (shape) =>
+            intersectsShape(shape, selectedCut, "x") &&
+            shape.y() + shape.height() < bottom
+        )
+        .map((shape) => shape.y() + shape.height());
+      const yMin = Math.max(boardShape.y(), ...ys);
+      const y = clamp(coord.y, yMin, bottom - 1);
+      selectedCut.y(y);
+      selectedCut.height(bottom - y);
+    } else if (actionType === "resize-right") {
+      const xs = defectShapes
+        .concat(
+          cutShapes.slice(0, selectedIndex),
+          cutShapes.slice(selectedIndex + 1)
+        )
+        .filter(
+          (shape) =>
+            intersectsShape(shape, selectedCut, "y") &&
+            shape.x() > selectedCut.x()
+        )
+        .map((shape) => shape.x());
+      const xMax = Math.min(boardShape.width(), ...xs);
+      const x = clamp(coord.x, left + 1, xMax);
       selectedCut.width(x - selectedCut.x());
-    } else if (actionType == "resize-y") {
-      var otherShapes = defectShapes.concat(
-        cutShapes.slice(0, selectedIndex),
-        cutShapes.slice(selectedIndex + 1)
-      );
-      var validOtherShapes = otherShapes.filter(
-        (shape) =>
-          intersectsShape(shape, selectedCut, "x") &&
-          shape.y() > selectedCut.y()
-      );
-      var ys = validOtherShapes.map((shape) => shape.y());
-      var yMax = Math.min(boardShape.height(), ...ys);
-      var y = clamp(coord.y, selectedCut.y(), yMax);
+    } else if (actionType === "resize-bottom") {
+      const ys = defectShapes
+        .concat(
+          cutShapes.slice(0, selectedIndex),
+          cutShapes.slice(selectedIndex + 1)
+        )
+        .filter(
+          (shape) =>
+            intersectsShape(shape, selectedCut, "x") &&
+            shape.y() > selectedCut.y()
+        )
+        .map((shape) => shape.y());
+      const yMax = Math.min(boardShape.height(), ...ys);
+      const y = clamp(coord.y, top + 1, yMax);
       selectedCut.height(y - selectedCut.y());
     } else {
-      assert(false, "unknown action type");
+      console.assert(false, "unknown action type");
     }
     updateCutsTable(selectedCut);
     updateTotalCuttingUnits(cutShapes);
@@ -326,13 +352,24 @@ CANVAS.on("mousemove", (event) => {
 });
 
 CANVAS.on("mousemove", (event) => {
-  let coord = getMousePosition(event);
-  let isCut = event.target.getAttribute("type") == "cut",
-    i = event.target.getAttribute("index");
-  if (isCut && isNearBorder(cutShapes[i], coord, "x")) {
-    event.target.style.cursor = "ew-resize";
-  } else if (isCut && isNearBorder(cutShapes[i], coord, "y")) {
-    event.target.style.cursor = "ns-resize";
+  const coord = getMousePosition(event);
+  const isCut = event.target.getAttribute("type") === "cut";
+  const i = event.target.getAttribute("index");
+  const shape = cutShapes[i];
+  if (isCut) {
+    if (
+      isNearBorder(shape, coord, "right") ||
+      isNearBorder(shape, coord, "left")
+    ) {
+      event.target.style.cursor = "ew-resize";
+    } else if (
+      isNearBorder(shape, coord, "top") ||
+      isNearBorder(shape, coord, "bottom")
+    ) {
+      event.target.style.cursor = "ns-resize";
+    } else {
+      event.target.style.cursor = "default";
+    }
   } else {
     event.target.style.cursor = "default";
   }
@@ -346,7 +383,7 @@ CANVAS.on("mouseup mouseleave", (event) => {
 });
 
 $("#add-cut").on("click", () => {
-  var cutShape = CANVAS.rect({
+  const cutShape = CANVAS.rect({
     x: DEFAULT_CUT.left,
     y: DEFAULT_CUT.top,
     width: DEFAULT_CUT.width,
@@ -371,7 +408,7 @@ function main(board, defects) {
 
   $("table#cuts tr").slice(1).empty();
 
-  let boardSize = {
+  const boardSize = {
     width: math.multiply(board.right, RESOLUTION).to("feet"),
     height: math.multiply(board.bottom, RESOLUTION).to("inch"),
   };
@@ -383,17 +420,17 @@ function main(board, defects) {
   boardShape.attr({ fill: COLORS.board });
   CANVAS.add(boardShape);
 
-  for (defect of defects) {
-    var defectShape = drawBox(CANVAS, defect);
+  for (const defect of defects) {
+    const defectShape = drawBox(CANVAS, defect);
     defectShape.attr({ fill: COLORS.defect });
     defectShapes.push(defectShape);
   }
 }
 
 function sizeToStr(size, precision = 0) {
-  let p = { notation: "fixed", precision: precision },
-    heightStr = size.height.format(p),
-    widthStr = size.width.format(p);
+  const p = { notation: "fixed", precision: precision };
+  const heightStr = size.height.format(p);
+  const widthStr = size.width.format(p);
   return `${heightStr} × ${widthStr}`;
 }
 
@@ -402,22 +439,47 @@ function updateGradeInfo(grade, board) {
   $("#min-cut-sizes").text(
     GRADES[grade].minCutSizes.map((size) => sizeToStr(size)).join(" or ")
   );
-  let sm = getSM(board);
+  const sm = getSM(board);
   $("#required-cutting-units").text(sm * GRADES[grade].yieldFactor);
   $("#num-cuts").text(GRADES[grade].getNumCuts(sm));
 }
 
+function populateBoardNamesSelect(boardNames) {
+  const select = $("select#board-name");
+  boardNames.forEach((boardName) => {
+    select.append($("<option />").val(boardName).text(boardName));
+  });
+}
+
+function getBoardId(boardName) {
+  return data.findIndex((datum) => datum.name === boardName);
+}
+
+$("select#board-name").on("change", (event) => {
+  boardName = event.target.value;
+  boardId = getBoardId(boardName);
+  console.log(boardName, boardId);
+  updateGradeInfo(grade, data[boardId].board);
+  main(data[boardId].board, data[boardId].defects[boardSide]);
+});
+
 $("select#side").on("change", (event) => {
-  main(BOARD, defects[event.target.value]);
+  boardSide = event.target.value;
+  main(data[boardId].board, data[boardId].defects[boardSide]);
 });
 
 $("select#grade").on("change", (event) => {
   grade = event.target.value;
-  updateGradeInfo(grade, BOARD);
+  updateGradeInfo(grade, data[boardId].board);
 });
 
 $(document).ready(() => {
-  (boardSide = $("select#side")[0].value), (grade = $("select#grade")[0].value);
-  main(BOARD, defects[boardSide]);
-  updateGradeInfo(grade, BOARD);
+  const boardNames = data.map((datum) => datum.name).sort();
+  populateBoardNamesSelect(boardNames);
+  boardName = $("select#board-name")[0].value;
+  boardSide = $("select#side")[0].value;
+  grade = $("select#grade")[0].value;
+  boardId = getBoardId(boardName);
+  updateGradeInfo(grade, data[boardId].board);
+  main(data[boardId].board, data[boardId].defects[boardSide]);
 });

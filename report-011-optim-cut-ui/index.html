@@ -39,11 +39,9 @@
               <h5 class="card-title">Board</h5>
               <div class="card-text">
                 <form class="form-inline">
-                  <label class="my-1 mr-2" for="board-name">name</label>
-                  <select id="board-name" class="custom-select">
-                    <option>0382</option>
-                  </select>
-                  <label class="my-1 mx-2" for="side">side</label>
+                  <label class="my-1 mr-2 text-secondary" for="board-name">name:</label>
+                  <select id="board-name" class="custom-select"></select>
+                  <label class="my-1 mx-2 text-secondary" for="side">side:</label>
                   <select id="side" class="custom-select">
                     <option value="front" selected>front</option>
                     <option value="back">back</option>
@@ -53,9 +51,13 @@
             </div>
             <ul class="list-group list-group-flush">
               <li class="list-group-item">
-                board size: <span id="board-size"></span>
+                <span class="text-secondary">board size:</span>
+                <span id="board-size"></span>
               </li>
-              <li class="list-group-item">surface measurei (SM): <span id="sm"></span></li>
+              <li class="list-group-item">
+                <span class="text-secondary">surface measurei (SM):</span>
+                <span id="sm"></span>
+              </li>
             </ul>
           </div>
           <div class="card my-4">
@@ -63,7 +65,7 @@
               <h5 class="card-title">Grade</h5>
               <div class="card-text">
                 <form class="form-inline">
-                  <label class="my-1 mr-2" for="grade">grade</label>
+                  <label class="my-1 mr-2 text-secondary" for="grade">grade:</label>
                   <select id="grade" class="custom-select">
                     <option value="FAS" selected>FAS</option>
                     <option value="No1COM">#1COM</option>
@@ -73,18 +75,19 @@
             </div>
             <ul class="list-group list-group-flush">
               <li class="list-group-item">
-                min. board size: <span id="min-board-size"></span>
+                <span class="text-secondary">min. board size:</span>
+                <span id="min-board-size"></span>
               </li>
               <li class="list-group-item">
-                min. cut size:
+                <span class="text-secondary">min. cut size:</span>
                 <span id="min-cut-sizes"></span>
               </li>
               <li class="list-group-item">
-                required cutting units:
+                <span class="text-secondary">required cutting units:</span>
                 <span id="required-cutting-units"></span>
               </li>
               <li class="list-group-item">
-                num. of cuts:
+                <span class="text-secondary">num. of cuts:</span>
                 <span id="num-cuts"></span>
               </li>
             </ul>
@@ -109,7 +112,8 @@
                   <tbody></tbody>
                 </table>
                 <p>
-                  total cutting units: <span id="total-cutting-units">0</span>
+                <span class="text-secondary">total cutting units:</span>
+                <span id="total-cutting-units">0</span>
                 </p>
               </div>
             </div>
@@ -118,5 +122,6 @@
       </div>
     </div>
   </body>
+  <script type="text/javascript" src="data.js"></script>
   <script type="text/javascript" src="main.js"></script>
 </html>
