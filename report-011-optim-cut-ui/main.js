@@ -123,10 +123,16 @@ function drawBox(canvas, box) {
   return canvas.rect({ x: x, y: y, width: w, height: h });
 }
 
+function getBoardSize(board) {
+  return {
+    width: math.multiply(board.right, RESOLUTION).to("feet"),
+    height: math.multiply(board.bottom, RESOLUTION).to("inch"),
+  };
+}
+
 function getSM(board) {
-  const boardWidth = math.multiply(board.right, RESOLUTION).to("feet");
-  const boardHeight = math.multiply(board.bottom, RESOLUTION).to("inch");
-  return Math.round((boardWidth.toNumber() * boardHeight.toNumber()) / 12);
+  const s = getBoardSize(board);
+  return Math.round((s.width.toNumber() * s.height.toNumber()) / 12);
 }
 
 let index = 0;
@@ -156,12 +162,16 @@ function getCuttingUnits(cut) {
   return size.height.to("inch").toNumber() * size.width.to("feet").toNumber();
 }
 
-function hasMinSize(cut) {
+function smallerEqRect(r1, r2) {
+  return (
+    math.smallerEq(r1.height, r2.height) && math.smallerEq(r1.width, r2.width)
+  );
+}
+
+function hasMinSizeCut(cut) {
   const cutSize = cutToSize(cut);
-  return GRADES[grade].minCutSizes.some(
-    (minCutSize) =>
-      math.smallerEq(minCutSize.height, cutSize.height) &&
-      math.smallerEq(minCutSize.width, cutSize.width)
+  return GRADES[grade].minCutSizes.some((minCutSize) =>
+    smallerEqRect(minCutSize, cutSize)
   );
 }
 
@@ -188,32 +198,38 @@ function updateCutsTable(cut) {
     `${w.toFixed(0)}, ${h.toFixed(0)}</td>` +
     `<td>${ww.toFixed(2)}</td>` +
     `<td>${ll.toFixed(2)}</td>` +
-    `<td>${aa.toFixed(2)}</td>`;
+    `<td>${aa.toFixed(2)}</td>` +
+    '<td><button class="btn"><i class="fas fa-trash" id="delete-cut"></i></button></td>';
 
   let row;
 
-  if (nrRows < cutShapes.length) {
-    row = $("table#cuts")[0].insertRow();
+  if (nrRows < cutShapes.filter((s) => s !== undefined).length) {
+    row = $("table#cuts tbody")[0].insertRow();
     row.dataset.id = i;
     row.innerHTML = innerHTML;
   } else {
-    row = $(`table#cuts tr[data-id=${i}]`)[0];
+    row = $(`table#cuts tbody tr[data-id=${i}]`)[0];
     row.innerHTML = innerHTML;
   }
 
-  if (hasMinSize(cut)) {
+  if (hasMinSizeCut(cut)) {
     row.className = "";
   } else {
     row.className = "table-warning";
   }
 }
 
-function updateTotalCuttingUnits(cuts) {
-  const totalCuttingUnits = cuts
+function getTotalCuttingUnits(cuts) {
+  return cuts
+    .filter((c) => c !== undefined)
     .map(getCuttingUnits)
     .reduce((a, b) => a + b, 0);
-  $("#total-cutting-units").text(totalCuttingUnits.toFixed(2));
 }
+
+function updateTotalCuttingUnits(cuts) {
+  $("#total-cutting-units").text(getTotalCuttingUnits(cuts).toFixed(2));
+}
+
 function getMousePosition(event) {
   const CTM = CANVAS.node.getScreenCTM();
   return {
@@ -299,6 +315,12 @@ function intersectsShape(shape1, shape2, axis) {
   }
 }
 
+function getOtherShapes(i) {
+  return defectShapes
+    .concat(cutShapes.slice(0, i), cutShapes.slice(i + 1))
+    .filter((s) => s !== undefined);
+}
+
 CANVAS.on("mousemove", (event) => {
   if (selectedCut) {
     const coord = getMousePosition(event);
@@ -312,10 +334,7 @@ CANVAS.on("mousemove", (event) => {
 
     if (actionType === "drag") {
       let corner = { x: coord.x - offset.x, y: coord.y - offset.y };
-      const otherShapes = defectShapes.concat(
-        cutShapes.slice(0, selectedIndex),
-        cutShapes.slice(selectedIndex + 1)
-      );
+      const otherShapes = getOtherShapes(selectedIndex);
       const xs = otherShapes.map((s) => [s.x(), s.x() + s.width()]).flat();
       const ys = otherShapes.map((s) => [s.y(), s.y() + s.height()]).flat();
       for (const x of xs) {
@@ -337,11 +356,7 @@ CANVAS.on("mousemove", (event) => {
       corner = constrainInBoard(selectedCut, corner);
       selectedCut.attr({ x: corner.x, y: corner.y });
     } else if (actionType === "resize-left") {
-      const xs = defectShapes
-        .concat(
-          cutShapes.slice(0, selectedIndex),
-          cutShapes.slice(selectedIndex + 1)
-        )
+      const xs = getOtherShapes(selectedIndex)
         .filter(
           (shape) =>
             intersectsShape(shape, selectedCut, "y") &&
@@ -353,11 +368,7 @@ CANVAS.on("mousemove", (event) => {
       selectedCut.x(x);
       selectedCut.width(right - x);
     } else if (actionType === "resize-top") {
-      const ys = defectShapes
-        .concat(
-          cutShapes.slice(0, selectedIndex),
-          cutShapes.slice(selectedIndex + 1)
-        )
+      const ys = getOtherShapes(selectedIndex)
         .filter(
           (shape) =>
             intersectsShape(shape, selectedCut, "x") &&
@@ -369,11 +380,7 @@ CANVAS.on("mousemove", (event) => {
       selectedCut.y(y);
       selectedCut.height(bottom - y);
     } else if (actionType === "resize-right") {
-      const xs = defectShapes
-        .concat(
-          cutShapes.slice(0, selectedIndex),
-          cutShapes.slice(selectedIndex + 1)
-        )
+      const xs = getOtherShapes(selectedIndex)
         .filter(
           (shape) =>
             intersectsShape(shape, selectedCut, "y") &&
@@ -384,11 +391,7 @@ CANVAS.on("mousemove", (event) => {
       const x = clamp(coord.x, left + 1, xMax);
       selectedCut.width(x - selectedCut.x());
     } else if (actionType === "resize-bottom") {
-      const ys = defectShapes
-        .concat(
-          cutShapes.slice(0, selectedIndex),
-          cutShapes.slice(selectedIndex + 1)
-        )
+      const ys = getOtherShapes(selectedIndex)
         .filter(
           (shape) =>
             intersectsShape(shape, selectedCut, "x") &&
@@ -403,6 +406,7 @@ CANVAS.on("mousemove", (event) => {
     }
     updateCutsTable(selectedCut);
     updateTotalCuttingUnits(cutShapes);
+    updateGradeInfo(grade, data[boardId].board);
   }
 });
 
@@ -450,7 +454,41 @@ $("#add-cut").on("click", () => {
   cutShapes.push(cutShape);
   updateCutsTable(cutShape);
   updateTotalCuttingUnits(cutShapes);
+  updateGradeInfo(grade, data[boardId].board);
   index += 1;
+});
+
+$("#load-cuts").on("click", () => {
+  let cuts1 = _.find(data[boardId].cuts[boardSide], (e) => e[0] === grade);
+  if (cuts1 === undefined) {
+    cuts1 = _.last(data[boardId].cuts[boardSide]);
+  }
+  cuts1 = cuts1[1];
+
+  // clean cuts
+  index = 0;
+  for (const cutShape of cutShapes) {
+    if (cutShape !== undefined) {
+      cutShape.remove();
+    }
+  }
+  cutShapes = [];
+  $("table#cuts tbody tr").remove();
+
+  // rebuild
+  for (const cut of cuts1) {
+    let cutShape = drawBox(CANVAS, cut);
+    cutShape.attr({
+      fill: COLORS.cut,
+      index: index,
+      type: "cut",
+    });
+    cutShapes.push(cutShape);
+    updateCutsTable(cutShape);
+    index += 1;
+  }
+  updateTotalCuttingUnits(cutShapes);
+  updateGradeInfo(grade, data[boardId].board);
 });
 
 function main(board, defects) {
@@ -461,12 +499,10 @@ function main(board, defects) {
   CANVAS.clear();
   CANVAS.size(board.right / K + 10, board.bottom / K + 10);
 
-  $("table#cuts tr").slice(1).empty();
+  $("table#cuts tbody tr").remove();
+  $("#total-cutting-units").text("0");
 
-  const boardSize = {
-    width: math.multiply(board.right, RESOLUTION).to("feet"),
-    height: math.multiply(board.bottom, RESOLUTION).to("inch"),
-  };
+  const boardSize = getBoardSize(board);
   $("#board-size").text(sizeToStr(boardSize, 2));
 
   $("#sm").text(getSM(board));
@@ -490,21 +526,60 @@ function sizeToStr(size, precision = 0) {
 }
 
 function updateGradeInfo(grade, board) {
-  $("#min-board-size").text(sizeToStr(GRADES[grade].minBoardSize));
+  // min board size
+  const minBoardSize = GRADES[grade].minBoardSize;
+  // adjust for kiln-dried boards
+  const minBoardSizeAdjusted = {
+    height: math.subtract(minBoardSize.height, math.unit(0.25, "inch")),
+    width: minBoardSize.width,
+  };
+  const hasMinSize = smallerEqRect(minBoardSizeAdjusted, getBoardSize(board));
+  $("#min-board-size").text(sizeToStr(minBoardSize));
+  {
+    const checkmark = hasMinSize ? "fa-check-circle" : "fa-circle";
+    $("#min-board-size-check i").attr("class", "far " + checkmark);
+  }
+
+  const cutShapes1 = cutShapes.filter((s) => s !== undefined);
+
+  // min cut size
+  const hasMinCutSize = cutShapes1.length && cutShapes1.every(hasMinSizeCut);
   $("#min-cut-sizes").text(
     GRADES[grade].minCutSizes.map((size) => sizeToStr(size)).join(" or ")
   );
+  {
+    const checkmark = hasMinCutSize ? "fa-check-circle" : "fa-circle";
+    $("#min-cut-sizes-check i").attr("class", "far " + checkmark);
+  }
+
+  // requred cutting units
   const sm = getSM(board);
   const reqCuttingUnits = sm * GRADES[grade].yieldFactor;
   const numCuts = GRADES[grade].getNumCuts(sm);
   const allowsExtraCut = GRADES[grade].allowsExtraCut(sm);
   const suffix = numCuts > 1 ? "s" : "";
+  let reqCuttingUnitsExtra = Infinity;
   let text = `${reqCuttingUnits} in ${numCuts} cut${suffix}`;
   if (allowsExtraCut) {
-    const reqCuttingUnitsExtra = sm * GRADES[grade].yieldFactorExtra;
+    reqCuttingUnitsExtra = sm * GRADES[grade].yieldFactorExtra;
     text = text + ` or ${reqCuttingUnitsExtra} in ${numCuts + 1} cuts`;
   }
   $("#required-cutting-units").text(text);
+  const totalCuttingUnits = getTotalCuttingUnits(cutShapes);
+  const hasReqCuttingUnits =
+    (cutShapes1.length <= numCuts && reqCuttingUnits <= totalCuttingUnits) ||
+    (allowsExtraCut &&
+      cutShapes1.length <= numCuts + 1 &&
+      reqCuttingUnitsExtra <= totalCuttingUnits);
+  {
+    const checkmark = hasReqCuttingUnits ? "fa-check-circle" : "fa-circle";
+    $("#required-cutting-units-check i").attr("class", "far " + checkmark);
+  }
+  {
+    const hasGrade = hasMinSize && hasMinCutSize && hasReqCuttingUnits;
+    const checkmark = hasGrade ? "fa-check-circle" : "fa-circle";
+    $("#grade-check i").attr("class", "far " + checkmark);
+  }
 }
 
 function populateBoardNamesSelect(boardNames) {
@@ -533,6 +608,18 @@ $("select#side").on("change", (event) => {
 $("select#grade").on("change", (event) => {
   grade = event.target.value;
   updateGradeInfo(grade, data[boardId].board);
+});
+
+$("table#cuts").on("click", (event) => {
+  if (event.target.id === "delete-cut") {
+    const row = event.target.closest("tr");
+    const i = row.getAttribute("data-id");
+    cutShapes[i].remove();
+    cutShapes[i] = undefined;
+    row.remove();
+    updateTotalCuttingUnits(cutShapes);
+    updateGradeInfo(grade, data[boardId].board);
+  }
 });
 
 $(document).ready(() => {
