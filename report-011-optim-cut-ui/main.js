@@ -316,6 +316,7 @@ function intersectsShape(shape1, shape2, axis) {
 }
 
 function getOtherShapes(i) {
+    // [...defectShapes, ...cutShapes]
   return defectShapes
     .concat(cutShapes.slice(0, i), cutShapes.slice(i + 1))
     .filter((s) => s !== undefined);
@@ -491,7 +492,11 @@ $("#load-cuts").on("click", () => {
   updateGradeInfo(grade, data[boardId].board);
 });
 
-function main(board, defects) {
+function main(boardId, boardSide) {
+  const board = data[boardId].board,
+    defects = data[boardId].defects[boardSide],
+    trueGrade = data[boardId].grade;
+
   index = 0;
   defectShapes = [];
   cutShapes = [];
@@ -504,6 +509,8 @@ function main(board, defects) {
 
   const boardSize = getBoardSize(board);
   $("#board-size").text(sizeToStr(boardSize, 2));
+
+  $("#true-grade").text(trueGrade);
 
   $("#sm").text(getSM(board));
 
@@ -597,12 +604,12 @@ $("select#board-name").on("change", (event) => {
   boardName = event.target.value;
   boardId = getBoardId(boardName);
   updateGradeInfo(grade, data[boardId].board);
-  main(data[boardId].board, data[boardId].defects[boardSide]);
+  main(boardId, boardSide);
 });
 
 $("select#side").on("change", (event) => {
   boardSide = event.target.value;
-  main(data[boardId].board, data[boardId].defects[boardSide]);
+  main(boardId, boardSide);
 });
 
 $("select#grade").on("change", (event) => {
@@ -630,5 +637,5 @@ $(document).ready(() => {
   grade = $("select#grade")[0].value;
   boardId = getBoardId(boardName);
   updateGradeInfo(grade, data[boardId].board);
-  main(data[boardId].board, data[boardId].defects[boardSide]);
+  main(boardId, boardSide);
 });
