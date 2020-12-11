@@ -644,6 +644,7 @@ CANVAS.on("mousemove", (event) => {
     const coord = getMousePosition(event);
     const cut = state.selectedCut;
     const i = state.selectedCutIndex;
+    const toSnap = $("#snap-switch").is(":checked");
 
     if (state.actionType === "drag") {
       let corner = { x: coord.x - state.offset.x, y: coord.y - state.offset.y };
@@ -661,7 +662,9 @@ CANVAS.on("mousemove", (event) => {
       const valsSnap = GRADES[state.grade].minCutSizes.map((c) => cut.right - sizeToRect(c).width);
       let x;
       x = clamp(coord.x, xMin, cut.right - 1);
-      x = snapTo(x, valsSnap);
+      if (toSnap) {
+        x = snapTo(x, valsSnap, 10);
+      }
       state.cuts[i].left = x;
     } else if (state.actionType === "resize-top") {
       const ys = state
@@ -672,7 +675,9 @@ CANVAS.on("mousemove", (event) => {
       const valsSnap = GRADES[state.grade].minCutSizes.map((c) => cut.bottom - sizeToRect(c).height);
       let y;
       y = clamp(coord.y, yMin, cut.bottom - 1);
-      y = snapTo(y, valsSnap);
+      if (toSnap) {
+        y = snapTo(y, valsSnap, 5);
+      }
       state.cuts[i].top = y;
     } else if (state.actionType === "resize-right") {
       const xs = state
@@ -683,7 +688,9 @@ CANVAS.on("mousemove", (event) => {
       const valsSnap = GRADES[state.grade].minCutSizes.map((c) => cut.left + sizeToRect(c).width);
       let x;
       x = clamp(coord.x, cut.left + 1, xMax);
-      x = snapTo(x, valsSnap);
+      if (toSnap) {
+        x = snapTo(x, valsSnap, 10);
+      }
       state.cuts[i].right = x;
     } else if (state.actionType === "resize-bottom") {
       const ys = state
@@ -694,7 +701,9 @@ CANVAS.on("mousemove", (event) => {
       const valsSnap = GRADES[state.grade].minCutSizes.map((c) => cut.top + sizeToRect(c).height);
       let y;
       y = clamp(coord.y, cut.top + 1, yMax);
-      y = snapTo(y, valsSnap);
+      if (toSnap) {
+        y = snapTo(y, valsSnap, 5);
+      }
       state.cuts[i].bottom = y;
     } else {
       console.assert(false, "unknown action type");
