@@ -11,9 +11,9 @@ function segmentIntersects(x1, x2, y1, y2) {
 }
 
 class Rectangle {
-  constructor({left, top, right, bottom}) {
+  constructor({ left, top, right, bottom }) {
     this.left = left;
-    this.top = top
+    this.top = top;
     this.right = right;
     this.bottom = bottom;
   }
@@ -39,22 +39,19 @@ class Rectangle {
   }
   intersects(other, axis) {
     if (axis === "x") {
-      return segmentIntersects(
-        this.left,
-        this.right,
-        other.left,
-        other.right
-      );
+      return segmentIntersects(this.left, this.right, other.left, other.right);
     } else if (axis === "y") {
-      return segmentIntersects(
-        this.top,
-        this.bottom,
-        other.top,
-        other.bottom
-      );
+      return segmentIntersects(this.top, this.bottom, other.top, other.bottom);
     } else {
       return this.intersects(other, "x") && this.intersects(other, "y");
     }
+  }
+  overlaps(other) {
+    return (
+      this.left < other.right &&
+      this.right > other.left &&
+      this.top < other.bottom &&
+      this.bottom > other.top);
   }
   toSize() {
     return {
@@ -63,14 +60,16 @@ class Rectangle {
   }}
 }
 
-const K = 1.5;  // inverse scaling factor; display board smaller to fit in screen
+const K = 1.5; // inverse scaling factor; display board smaller to fit in screen
 const RESOLUTION = math.unit(0.0625, "inch");
 const DEFAULT_CUT = { left: 5, top: 5, right: 100, bottom: 30 };
 const COLORS = {
   board: "rgb(222, 184, 135)",
   defect: "rgb(45, 32, 27)",
   cut: "rgb(130, 173, 215)",
-  selected: "rgb(7, 57, 12)",
+  // selected: "rgb(7, 57, 12)",
+  selected: "#07397e",
+  collision: "#dc5856",
   // particular defects
   STAIN: "#156064",
   CHECKS: "#247ba0",
@@ -86,13 +85,13 @@ const COLORS = {
 };
 
 const SHORT_TO_LONG_GRADE = {
-  "FAS": "FAS",
-  "F1F": "F1F",
-  "SEL": "SEL",
+  FAS: "FAS",
+  F1F: "F1F",
+  SEL: "SEL",
   "1C": "#1 COM",
   "2AC": "#2A COM",
   "3AC": "#3A COM",
-}
+};
 
 const GRADES = {
   FAS: {
@@ -189,7 +188,6 @@ const GRADES = {
   },
 };
 
-
 const CANVAS = SVG().addTo("#svg-canvas");
 const DATA = data;
 
@@ -202,12 +200,12 @@ function populateBoardNamesSelect(boardNames) {
 
 class State {
   constructor(boardName, boardSide, grade) {
-    this.boardName = boardName
+    this.boardName = boardName;
     this.boardSide = boardSide;
     this.grade = grade;
     this.cuts = [];
     this.selectedCutIndex = null;
-    this.offset = {"x": 0, "y": 0};
+    this.offset = { x: 0, y: 0 };
     this.actionType = null;
   }
   get board() {
@@ -265,6 +263,16 @@ function hasMinSizeCut(cut) {
   );
 }
 
+function snapTo(x, vals, tol=5) {
+  return vals.find((v) => Math.abs(x - v) <= tol) || x;
+}
+
+function sizeToRect(size) {
+  const right = math.divide(size.width.to("inch"), RESOLUTION);
+  const bottom = math.divide(size.height.to("inch"), RESOLUTION);
+  return new Rectangle({ left: 0, top: 0, right: right, bottom: bottom });
+}
+
 function sizeToStr(size, precision = 0) {
   const p = { notation: "fixed", precision: precision };
   const heightStr = size.height.format(p);
@@ -281,8 +289,8 @@ function getTotalCuttingUnits(cuts) {
 function getMousePosition(event) {
   const CTM = CANVAS.node.getScreenCTM();
   return {
-    x: K * (event.clientX - CTM.e) / CTM.a,
-    y: K * (event.clientY - CTM.f) / CTM.d,
+    x: (K * (event.clientX - CTM.e)) / CTM.a,
+    y: (K * (event.clientY - CTM.f)) / CTM.d,
   };
 }
 
@@ -330,7 +338,7 @@ class Renderer {
     this.renderCuts(state);
   }
 
-  drawRectShape(rect, shape=undefined) {
+  drawRectShape(rect, shape = undefined) {
     const x = rect.left / K;
     const y = rect.top / K;
     const w = rect.width / K;
@@ -380,7 +388,7 @@ class Renderer {
 
   renderCuts(state) {
     this.clearCuts();
-    for (let i=0; i<state.cuts.length; i++) {
+    for (let i = 0; i < state.cuts.length; i++) {
       if (state.cuts[i] !== undefined) {
         this.renderCut(state, i);
       }
@@ -392,25 +400,19 @@ class Renderer {
     $("#total-cutting-units").text(getTotalCuttingUnits(state.cuts).toFixed(2));
   }
 
-  renderCut(state, i) {
+  renderCut(state, i, color = COLORS.cut) {
     // draw cut
     const cut = state.cuts[i];
     this.cutShapes[i] = this.drawRectShape(cut, this.cutShapes[i]);
     this.cutShapes[i].attr({
-      fill: COLORS.cut,
+      fill: color,
       index: i,
       type: "cut",
     });
 
     // update table
-    const ww = math
-      .multiply(cut.height, RESOLUTION)
-      .to("inch")
-      .toNumber();
-    const ll = math
-      .multiply(cut.width, RESOLUTION)
-      .to("feet")
-      .toNumber();
+    const ww = math.multiply(cut.height, RESOLUTION).to("inch").toNumber();
+    const ll = math.multiply(cut.width, RESOLUTION).to("feet").toNumber();
     const aa = ww * ll;
 
     const nrRows = $("table#cuts tr").length - 1;
@@ -459,7 +461,9 @@ class Renderer {
     const hasMinSize = smallerEqRect(minBoardSizeAdjusted, state.board.toSize());
     $("#min-board-size").text(sizeToStr(minBoardSize));
     {
+      const textColor = hasMinSize ? "text-success" : "text-danger";
       const checkmark = hasMinSize ? "fa-check-circle" : "fa-circle";
+      $("#min-board-size-label").attr("class", textColor);
       $("#min-board-size-check i").attr("class", "far " + checkmark);
     }
 
@@ -468,10 +472,14 @@ class Renderer {
     // min cut size
     const hasMinCutSize = cuts.length && cuts.every(hasMinSizeCut);
     $("#min-cut-sizes").text(
-      GRADES[state.grade].minCutSizes.map((size) => sizeToStr(size)).join(" or ")
+      GRADES[state.grade].minCutSizes
+        .map((size) => sizeToStr(size))
+        .join(" or ")
     );
     {
+      const textColor = hasMinCutSize ? "text-success" : "text-danger";
       const checkmark = hasMinCutSize ? "fa-check-circle" : "fa-circle";
+      $("#min-cut-sizes-label").attr("class", textColor);
       $("#min-cut-sizes-check i").attr("class", "far " + checkmark);
     }
 
@@ -495,12 +503,16 @@ class Renderer {
         cuts.length <= numCuts + 1 &&
         reqCuttingUnitsExtra <= totalCuttingUnits);
     {
+      const textColor = hasReqCuttingUnits ? "text-success" : "text-danger";
       const checkmark = hasReqCuttingUnits ? "fa-check-circle" : "fa-circle";
+      $("#required-cutting-units-label").attr("class", textColor);
       $("#required-cutting-units-check i").attr("class", "far " + checkmark);
     }
     {
       const hasGrade = hasMinSize && hasMinCutSize && hasReqCuttingUnits;
+      const textColor = hasGrade ? "text-success" : "text-danger";
       const checkmark = hasGrade ? "fa-check-circle" : "fa-circle";
+      $("#grade-label").attr("class", "my-1 mr-2 " + textColor);
       $("#grade-check i").attr("class", "far " + checkmark);
     }
   }
@@ -520,13 +532,13 @@ renderer.renderAll(state);
 // Events
 $("select#board-name").on("change", (event) => {
   state.boardName = event.target.value;
-  state.resetCuts()
+  state.resetCuts();
   renderer.renderAll(state);
 });
 
 $("select#side").on("change", (event) => {
   state.boardSide = event.target.value;
-  state.resetCuts()
+  state.resetCuts();
   renderer.renderAll(state);
 });
 
@@ -537,11 +549,11 @@ $("select#grade").on("change", (event) => {
 
 $("#load-cuts").on("click", () => {
   let gradesAndCuts = DATA[state.boardId].cuts[state.boardSide];
-  let gc = _.find(gradesAndCuts, ([g, ]) => g === state.grade);
+  let gc = _.find(gradesAndCuts, ([g]) => g === state.grade);
   if (gc === undefined) {
     gc = _.last(gradesAndCuts);
   }
-  state.cuts = gc[1].map(cut => new Rectangle(cut));
+  state.cuts = gc[1].map((cut) => new Rectangle(cut));
 
   renderer.renderCuts(state);
   renderer.renderPanelGrade(state);
@@ -558,12 +570,16 @@ $("table#cuts").on("click", (event) => {
   if (event.target.id === "delete-cut") {
     const row = event.target.closest("tr");
     const i = row.getAttribute("data-id");
-    state.cuts[i] = undefined
+    state.cuts[i] = undefined;
     renderer.renderCuts(state);
     renderer.renderTotalCuttingUnits(state);
     renderer.renderPanelGrade(state);
   }
 });
+
+function isCollision(state, selectedCut) {
+  return state.getOtherRects().some((r) => selectedCut.overlaps(r));
+}
 
 CANVAS.on("mousedown", (event) => {
   if (event.target.getAttribute("type") === "cut") {
@@ -583,10 +599,20 @@ CANVAS.on("mousedown", (event) => {
     } else {
       state.actionType = "drag";
     }
+
+    if (isCollision(state, state.selectedCut)) {
+      renderer.renderCut(state, state.selectedCutIndex, COLORS.collision);
+    } else {
+      renderer.renderCut(state, state.selectedCutIndex, COLORS.selected);
+    }
   }
 });
 
 CANVAS.on("mouseup mouseleave", () => {
+  if (state.selectedCut) {
+    const i = state.selectedCutIndex;
+    renderer.renderCut(state, i, COLORS.cut);
+  }
   state.selectedCutIndex = null;
 });
 
@@ -597,10 +623,7 @@ CANVAS.on("mousemove", (event) => {
   const i = event.target.getAttribute("index");
   const cut = state.cuts[i];
   if (isCut) {
-    if (
-      isNearBorder(cut, coord, "right") ||
-      isNearBorder(cut, coord, "left")
-    ) {
+    if (isNearBorder(cut, coord, "right") || isNearBorder(cut, coord, "left")) {
       event.target.style.cursor = "ew-resize";
     } else if (
       isNearBorder(cut, coord, "top") ||
@@ -617,65 +640,66 @@ CANVAS.on("mousemove", (event) => {
 
 CANVAS.on("mousemove", (event) => {
   if (state.selectedCut) {
+    let color = COLORS.selected;
     const coord = getMousePosition(event);
     const cut = state.selectedCut;
     const i = state.selectedCutIndex;
 
     if (state.actionType === "drag") {
       let corner = { x: coord.x - state.offset.x, y: coord.y - state.offset.y };
-      const otherRects = state.getOtherRects();
-      const xs = otherRects.flatMap((s) => [s.left, s.right]);
-      const ys = otherRects.flatMap((s) => [s.top, s.bottom]);
-      for (const x of xs) {
-        if (Math.abs(x - corner.x) <= 5) {
-          corner.x = x;
-        }
-        if (Math.abs(x - (corner.x + cut.width)) <= 5) {
-          corner.x = x - cut.width;
-        }
-      }
-      for (const y of ys) {
-        if (Math.abs(y - corner.y) <= 5) {
-          corner.y = y;
-        }
-        if (Math.abs(y - (corner.y + cut.height)) <= 5) {
-          corner.y = y - cut.height;
-        }
+      if (isCollision(state, cut)) {
+        color = COLORS.collision;
       }
       corner = constrainInBoard(state.board, cut, corner);
       state.cuts[i].moveTo(corner);
     } else if (state.actionType === "resize-left") {
-      const xs = state.getOtherRects()
-        .filter(r => r.intersects(cut, "y") && r.right < cut.right)
-        .map(r => r.right);
+      const xs = state
+        .getOtherRects()
+        .filter((r) => r.intersects(cut, "y") && r.right < cut.right)
+        .map((r) => r.right);
       const xMin = Math.max(state.board.x, ...xs);
-      const x = clamp(coord.x, xMin, cut.right - 1);
+      const valsSnap = GRADES[state.grade].minCutSizes.map((c) => cut.right - sizeToRect(c).width);
+      let x;
+      x = clamp(coord.x, xMin, cut.right - 1);
+      x = snapTo(x, valsSnap);
       state.cuts[i].left = x;
     } else if (state.actionType === "resize-top") {
-      const ys = state.getOtherRects()
-        .filter(r => r.intersects(cut, "x") && r.bottom < cut.bottom)
-        .map(r => r.bottom);
+      const ys = state
+        .getOtherRects()
+        .filter((r) => r.intersects(cut, "x") && r.bottom < cut.bottom)
+        .map((r) => r.bottom);
       const yMin = Math.max(state.board.y, ...ys);
-      const y = clamp(coord.y, yMin, cut.bottom - 1);
+      const valsSnap = GRADES[state.grade].minCutSizes.map((c) => cut.bottom - sizeToRect(c).height);
+      let y;
+      y = clamp(coord.y, yMin, cut.bottom - 1);
+      y = snapTo(y, valsSnap);
       state.cuts[i].top = y;
     } else if (state.actionType === "resize-right") {
-      const xs = state.getOtherRects()
-        .filter(r => r.intersects(cut, "y") && r.left > cut.left)
-        .map(r => r.left);
+      const xs = state
+        .getOtherRects()
+        .filter((r) => r.intersects(cut, "y") && r.left > cut.left)
+        .map((r) => r.left);
       const xMax = Math.min(state.board.width, ...xs);
-      const x = clamp(coord.x, cut.left + 1, xMax);
+      const valsSnap = GRADES[state.grade].minCutSizes.map((c) => cut.left + sizeToRect(c).width);
+      let x;
+      x = clamp(coord.x, cut.left + 1, xMax);
+      x = snapTo(x, valsSnap);
       state.cuts[i].right = x;
     } else if (state.actionType === "resize-bottom") {
-      const ys = state.getOtherRects()
-        .filter(r => r.intersects(cut, "x") && r.top > cut.top)
-        .map(r => r.top);
+      const ys = state
+        .getOtherRects()
+        .filter((r) => r.intersects(cut, "x") && r.top > cut.top)
+        .map((r) => r.top);
       const yMax = Math.min(state.board.height, ...ys);
-      const y = clamp(coord.y, cut.top + 1, yMax);
+      const valsSnap = GRADES[state.grade].minCutSizes.map((c) => cut.top + sizeToRect(c).height);
+      let y;
+      y = clamp(coord.y, cut.top + 1, yMax);
+      y = snapTo(y, valsSnap);
       state.cuts[i].bottom = y;
     } else {
       console.assert(false, "unknown action type");
     }
-    renderer.renderCut(state, i);
+    renderer.renderCut(state, i, color);
     renderer.renderPanelGrade(state);
     renderer.renderTotalCuttingUnits(state);
   }
