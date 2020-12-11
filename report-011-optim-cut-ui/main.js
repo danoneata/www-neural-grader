@@ -260,7 +260,7 @@ function smallerEqRect(r1, r2) {
 
 function hasMinSizeCut(cut) {
   const cutSize = cut.toSize();
-  return GRADES[grade].minCutSizes.some((minCutSize) =>
+  return GRADES[state.grade].minCutSizes.some((minCutSize) =>
     smallerEqRect(minCutSize, cutSize)
   );
 }
