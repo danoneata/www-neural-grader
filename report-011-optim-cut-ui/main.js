@@ -60,7 +60,6 @@ class Rectangle {
   }}
 }
 
-const K = 1.5; // inverse scaling factor; display board smaller to fit in screen
 const RESOLUTION = math.unit(0.0625, "inch");
 const DEFAULT_CUT = { left: 5, top: 5, right: 100, bottom: 30 };
 const COLORS = {
@@ -207,6 +206,7 @@ class State {
     this.selectedCutIndex = null;
     this.offset = { x: 0, y: 0 };
     this.actionType = null;
+    this.K = 1.5;  // inverse scaling factor; display board smaller to fit in screen
   }
   get board() {
     return new Rectangle(DATA[this.boardId].board);
@@ -289,8 +289,8 @@ function getTotalCuttingUnits(cuts) {
 function getMousePosition(event) {
   const CTM = CANVAS.node.getScreenCTM();
   return {
-    x: (K * (event.clientX - CTM.e)) / CTM.a,
-    y: (K * (event.clientY - CTM.f)) / CTM.d,
+    x: (state.K * (event.clientX - CTM.e)) / CTM.a,
+    y: (state.K * (event.clientY - CTM.f)) / CTM.d,
   };
 }
 
@@ -339,10 +339,10 @@ class Renderer {
   }
 
   drawRectShape(rect, shape = undefined) {
-    const x = rect.left / K;
-    const y = rect.top / K;
-    const w = rect.width / K;
-    const h = rect.height / K;
+    const x = rect.left / state.K;
+    const y = rect.top / state.K;
+    const w = rect.width / state.K;
+    const h = rect.height / state.K;
     if (shape === undefined) {
       // create new shape
       shape = CANVAS.rect({ x: x, y: y, width: w, height: h });
@@ -366,7 +366,7 @@ class Renderer {
 
   renderBoard(state) {
     CANVAS.clear();
-    CANVAS.size(state.board.right / K + 10, state.board.bottom / K + 10);
+    CANVAS.size(state.board.right / state.K + 10, state.board.bottom / state.K + 10);
 
     this.boardShape = this.drawRectShape(state.board);
     this.boardShape.attr({ fill: COLORS.board });
@@ -712,4 +712,10 @@ CANVAS.on("mousemove", (event) => {
     renderer.renderPanelGrade(state);
     renderer.renderTotalCuttingUnits(state);
   }
+});
+
+$('input[type=range]').on('input', function () {
+  state.K = 50 * 1.5 / this.value;
+  renderer.renderBoard(state);
+  renderer.renderCuts(state);
 });
