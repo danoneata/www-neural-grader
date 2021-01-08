@@ -51,13 +51,55 @@ class Rectangle {
       this.left < other.right &&
       this.right > other.left &&
       this.top < other.bottom &&
-      this.bottom > other.top);
+      this.bottom > other.top
+    );
   }
   toSize() {
     return {
       width: math.multiply(this.width, RESOLUTION).to("feet"),
       height: math.multiply(this.height, RESOLUTION).to("inch"),
-  }}
+    };
+  }
+}
+
+class DefectLimits {
+  constructor({ defectType, aggregation, sizeType, getDefectValue, getLimit }) {
+    const AGG_FUNCS = {
+      sum: (arr) => arr.reduce((x, y) => x + y, 0),
+      max: (arr) => arr.reduce((x, y) => Math.max(x, y), 0),
+    };
+    const SIZE_FUNCS = {
+      length: (r) => r.width,
+      diameter: (r) => (r.width + r.height) / 2,
+    };
+    this.defectType = defectType;
+    this.aggFunc = AGG_FUNCS[aggregation];
+    this.getSize = SIZE_FUNCS[sizeType];
+    this.getDefectValue = getDefectValue;
+    this.getLimit = getLimit;
+  }
+  areWithinLimits(defects, board, returnInfo = false) {
+    const defectValue = this.getDefectValue(
+      this.aggFunc(
+        defects
+          .filter((d) => d.type === this.defectType)
+          .map((d) => this.getSize(d.rect))
+      )
+    );
+    const limit = this.getLimit(board);
+    if (!returnInfo) {
+      return defectValue <= limt;
+    } else {
+      return [
+        defectValue <= limit,
+        {
+          defectType: this.defectType,
+          defectValue: defectValue,
+          limit: limit,
+        },
+      ];
+    }
+  }
 }
 
 const RESOLUTION = math.unit(0.0625, "inch");
@@ -112,6 +154,40 @@ const GRADES = {
     yieldFactorExtra: 11,
     getNumCuts: (sm) => Math.min(Math.max(Math.floor(sm / 4.0), 1), 4),
     allowsExtraCut: (sm) => 6 <= sm && sm <= 15,
+    defectLimits: [
+      new DefectLimits({
+        defectType: "SOUND_KNOT",
+        aggregation: "max",
+        sizeType: "diameter",
+        getDefectValue: (value) =>
+          math.multiply(value, RESOLUTION).to("inch").toNumber(),
+        getLimit: (board) => getSM(board) / 3,
+      }),
+      new DefectLimits({
+        defectType: "UNSOUND_KNOT",
+        aggregation: "max",
+        sizeType: "diameter",
+        getDefectValue: (value) =>
+          math.multiply(value, RESOLUTION).to("inch").toNumber(),
+        getLimit: (board) => getSM(board) / 3,
+      }),
+      new DefectLimits({
+        defectType: "PITH",
+        aggregation: "sum",
+        sizeType: "length",
+        getDefectValue: (value) =>
+          math.multiply(value, RESOLUTION).to("inch").toNumber(),
+        getLimit: (board) => getSM(board),
+      }),
+      new DefectLimits({
+        defectType: "WANE",
+        aggregation: "sum",
+        sizeType: "length",
+        getDefectValue: (value) =>
+          math.multiply(value, RESOLUTION).to("feet").toNumber(),
+        getLimit: (board) => board.toSize().width.to("feet").toNumber() / 2,
+      }),
+    ],
   },
   FASSEL: {
     minBoardSize: {
@@ -132,6 +208,7 @@ const GRADES = {
     yieldFactorExtra: 11,
     getNumCuts: (sm) => Math.min(Math.max(Math.floor(sm / 4.0), 1), 4),
     allowsExtraCut: (sm) => 6 <= sm && sm <= 15,
+    defectLimits: [],
   },
   No1COM: {
     minBoardSize: {
@@ -152,6 +229,7 @@ const GRADES = {
     yieldFactorExtra: 9,
     getNumCuts: (sm) => Math.min(Math.max(Math.floor((sm + 1) / 3.0), 1), 5),
     allowsExtraCut: (sm) => 3 <= sm && sm <= 10,
+    defectLimits: [],
   },
   No2ACOM: {
     minBoardSize: {
@@ -184,6 +262,7 @@ const GRADES = {
     yieldFactorExtra: null,
     getNumCuts: () => Infinity,
     allowsExtraCut: () => false,
+    defectLimits: [],
   },
 };
 
@@ -206,14 +285,14 @@ class State {
     this.selectedCutIndex = null;
     this.offset = { x: 0, y: 0 };
     this.actionType = null;
-    this.K = 1.5;  // inverse scaling factor; display board smaller to fit in screen
+    this.K = 1.5; // inverse scaling factor; display board smaller to fit in screen
   }
   get board() {
     return new Rectangle(DATA[this.boardId].board);
   }
   get defects() {
     return DATA[this.boardId].defects[this.boardSide].map((d) => {
-      return { rect: new Rectangle(d.rect), type: d.type }
+      return { rect: new Rectangle(d.rect), type: d.type };
     });
   }
   get trueGrade() {
@@ -231,7 +310,11 @@ class State {
   }
   getOtherRects() {
     const i = this.selectedCutIndex;
-    const rects = [..._.pluck(this.defects, "rect"), ...this.cuts.slice(0, i), ...this.cuts.slice(i + 1)];
+    const rects = [
+      ..._.pluck(this.defects, "rect"),
+      ...this.cuts.slice(0, i),
+      ...this.cuts.slice(i + 1),
+    ];
     return _.compact(rects);
   }
 }
@@ -263,7 +346,7 @@ function hasMinSizeCut(cut) {
   );
 }
 
-function snapTo(x, vals, tol=5) {
+function snapTo(x, vals, tol = 5) {
   return vals.find((v) => Math.abs(x - v) <= tol) || x;
 }
 
@@ -366,7 +449,10 @@ class Renderer {
 
   renderBoard(state) {
     CANVAS.clear();
-    CANVAS.size(state.board.right / state.K + 10, state.board.bottom / state.K + 10);
+    CANVAS.size(
+      state.board.right / state.K + 10,
+      state.board.bottom / state.K + 10
+    );
 
     this.boardShape = this.drawRectShape(state.board);
     this.boardShape.attr({ fill: COLORS.board });
@@ -375,11 +461,11 @@ class Renderer {
     for (const defect of state.defects) {
       // const defectShape = CANVAS.rect();
       const defectShape = this.drawRectShape(defect.rect);
-      const defectSizeStr = sizeToStr(defect.rect.toSize(), 1)
+      const defectSizeStr = sizeToStr(defect.rect.toSize(), 1);
       defectShape.attr({
-          "fill": COLORS[defect.type],
-          "data-toggle": "tooltip",
-          "title": `${defect.type} ${defectSizeStr}`,
+        fill: COLORS[defect.type],
+        "data-toggle": "tooltip",
+        title: `${defect.type} ${defectSizeStr}`,
       });
       this.defectShapes.push(defectShape);
     }
@@ -458,7 +544,10 @@ class Renderer {
       height: math.subtract(minBoardSize.height, math.unit(0.25, "inch")),
       width: minBoardSize.width,
     };
-    const hasMinSize = smallerEqRect(minBoardSizeAdjusted, state.board.toSize());
+    const hasMinSize = smallerEqRect(
+      minBoardSizeAdjusted,
+      state.board.toSize()
+    );
     $("#min-board-size").text(sizeToStr(minBoardSize));
     {
       const textColor = hasMinSize ? "text-success" : "text-danger";
@@ -508,6 +597,34 @@ class Renderer {
       $("#required-cutting-units-label").attr("class", textColor);
       $("#required-cutting-units-check i").attr("class", "far " + checkmark);
     }
+
+    // defect limits
+    const defectLimitsResults = GRADES[state.grade].defectLimits.map((d) =>
+      d.areWithinLimits(state.defects, state.board, true)
+    );
+    const hasDefectLimits = defectLimitsResults.every((r) => r[0]);
+
+    let row;
+    $("table#defects tbody tr").remove();
+    for (const dlr of defectLimitsResults) {
+      const checkmark = dlr[0] ? "fa-check-circle" : "fa-circle";
+      const innerHTML =
+        `<td>${dlr[1].defectType}</td>` +
+        `<td>${dlr[1].defectValue.toFixed(2)}</td>` +
+        `<td>${dlr[1].limit.toFixed(2)}</td>` +
+        `<td class="text-right"><i class="far ${checkmark}"></i></td>`;
+      row = $("table#defects tbody")[0].insertRow();
+      row.innerHTML = innerHTML;
+    }
+
+    {
+      const textColor = hasDefectLimits ? "text-success" : "text-danger";
+      const checkmark = hasDefectLimits ? "fa-check-circle" : "fa-circle";
+      $("#defect-limits-label").attr("class", textColor);
+      $("#defect-limits-check i").attr("class", "far " + checkmark);
+    }
+
+    // overall grade
     {
       const hasGrade = hasMinSize && hasMinCutSize && hasReqCuttingUnits;
       const textColor = hasGrade ? "text-success" : "text-danger";
@@ -659,7 +776,9 @@ CANVAS.on("mousemove", (event) => {
         .filter((r) => r.intersects(cut, "y") && r.right < cut.right)
         .map((r) => r.right);
       const xMin = Math.max(state.board.x, ...xs);
-      const valsSnap = GRADES[state.grade].minCutSizes.map((c) => cut.right - sizeToRect(c).width);
+      const valsSnap = GRADES[state.grade].minCutSizes.map(
+        (c) => cut.right - sizeToRect(c).width
+      );
       let x;
       x = clamp(coord.x, xMin, cut.right - 1);
       if (toSnap) {
@@ -672,7 +791,9 @@ CANVAS.on("mousemove", (event) => {
         .filter((r) => r.intersects(cut, "x") && r.bottom < cut.bottom)
         .map((r) => r.bottom);
       const yMin = Math.max(state.board.y, ...ys);
-      const valsSnap = GRADES[state.grade].minCutSizes.map((c) => cut.bottom - sizeToRect(c).height);
+      const valsSnap = GRADES[state.grade].minCutSizes.map(
+        (c) => cut.bottom - sizeToRect(c).height
+      );
       let y;
       y = clamp(coord.y, yMin, cut.bottom - 1);
       if (toSnap) {
@@ -685,7 +806,9 @@ CANVAS.on("mousemove", (event) => {
         .filter((r) => r.intersects(cut, "y") && r.left > cut.left)
         .map((r) => r.left);
       const xMax = Math.min(state.board.width, ...xs);
-      const valsSnap = GRADES[state.grade].minCutSizes.map((c) => cut.left + sizeToRect(c).width);
+      const valsSnap = GRADES[state.grade].minCutSizes.map(
+        (c) => cut.left + sizeToRect(c).width
+      );
       let x;
       x = clamp(coord.x, cut.left + 1, xMax);
       if (toSnap) {
@@ -698,7 +821,9 @@ CANVAS.on("mousemove", (event) => {
         .filter((r) => r.intersects(cut, "x") && r.top > cut.top)
         .map((r) => r.top);
       const yMax = Math.min(state.board.height, ...ys);
-      const valsSnap = GRADES[state.grade].minCutSizes.map((c) => cut.top + sizeToRect(c).height);
+      const valsSnap = GRADES[state.grade].minCutSizes.map(
+        (c) => cut.top + sizeToRect(c).height
+      );
       let y;
       y = clamp(coord.y, cut.top + 1, yMax);
       if (toSnap) {
@@ -714,8 +839,8 @@ CANVAS.on("mousemove", (event) => {
   }
 });
 
-$('input[type=range]').on('input', function () {
-  state.K = 50 * 1.5 / this.value;
+$("input[type=range]").on("input", function () {
+  state.K = (50 * 1.5) / this.value;
   renderer.renderBoard(state);
   renderer.renderCuts(state);
 });
