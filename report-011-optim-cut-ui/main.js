@@ -63,13 +63,43 @@ class Rectangle {
 }
 
 class DefectLimits {
-  constructor({ defectType, aggregation, sizeType, getDefectValue, getLimit }) {
+  constructor({ defectType, aggregation, sizeType, getDefectValue, getLimit, description }) {
     const AGG_FUNCS = {
-      sum: (arr) => arr.reduce((x, y) => x + y, 0),
-      max: (arr) => arr.reduce((x, y) => Math.max(x, y), 0),
+      sum: (defects) => {
+        return defects.map((d) => d.size).reduce((acc, d) => acc + d, 0);
+      },
+      max: (defects) => {
+        return defects
+          .map((d) => d.size)
+          .reduce((acc, d) => Math.max(acc, d), 0);
+      },
+      "max-sum-edge": (defects, board) => {
+        // aggregates defects based on their location — top and bottom edge
+        const d = {
+          top: defects.filter((d) => d.rect.top == board.top),
+          bot: defects.filter((d) => d.rect.bottom == board.bottom),
+        };
+        return Math.max(AGG_FUNCS.sum(d.top), AGG_FUNCS.sum(d.bot));
+      },
+      "sum-max-edge": (defects, board) => {
+        // aggregates defects based on their location — top and bottom edge
+        const d = {
+          top: defects.filter((d) => d.rect.top == board.top),
+          bot: defects.filter((d) => d.rect.bottom == board.bottom),
+        };
+        return AGG_FUNCS.max(d.top) + AGG_FUNCS.max(d.bot);
+      },
+      "sum-edge": (defects, board) => {
+        return AGG_FUNCS.sum(
+          defects.filter(
+            (d) => d.rect.top == board.top || d.rect.bottom == board.bottom
+          )
+        );
+      },
     };
     const SIZE_FUNCS = {
       length: (r) => r.width,
+      width: (r) => r.height,
       diameter: (r) => (r.width + r.height) / 2,
     };
     this.defectType = defectType;
@@ -77,13 +107,18 @@ class DefectLimits {
     this.getSize = SIZE_FUNCS[sizeType];
     this.getDefectValue = getDefectValue;
     this.getLimit = getLimit;
+    this.description = description;
   }
   areWithinLimits(defects, board, returnInfo = false) {
     const defectValue = this.getDefectValue(
       this.aggFunc(
         defects
           .filter((d) => d.type === this.defectType)
-          .map((d) => this.getSize(d.rect))
+          .map((d) => {
+            let s = { size: this.getSize(d.rect) };
+            return { ...s, ...d };
+          }),
+        board
       )
     );
     const limit = this.getLimit(board);
@@ -93,6 +128,7 @@ class DefectLimits {
       return [
         defectValue <= limit,
         {
+          description: this.description,
           defectType: this.defectType,
           defectValue: defectValue,
           limit: limit,
@@ -162,6 +198,7 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => getSM(board) / 3,
+        description: "the diameter of any sound knot (in inches) should be less than one-third of the surface measure (in feet)",
       }),
       new DefectLimits({
         defectType: "UNSOUND_KNOT",
@@ -170,6 +207,7 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => getSM(board) / 3,
+        description: "the diameter of any unsound knot (in inches) should be less than one-third of the surface measure (in feet)",
       }),
       new DefectLimits({
         defectType: "PITH",
@@ -178,18 +216,29 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => getSM(board),
+        description: "pith in the aggregate in length (in inches) should not exceed the surface measure (in feet)",
       }),
       new DefectLimits({
         defectType: "WANE",
-        aggregation: "sum",
+        aggregation: "max-sum-edge",
         sizeType: "length",
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("feet").toNumber(),
         getLimit: (board) => board.toSize().width.to("feet").toNumber() / 2,
+        description: "wane on either edge should not exceed over one-half of the length in the aggregate",
+      }),
+      new DefectLimits({
+        defectType: "SPLIT_OR_SHAKE",
+        aggregation: "sum",
+        sizeType: "length",
+        getDefectValue: (value) =>
+          math.multiply(value, RESOLUTION).to("inch").toNumber(),
+        getLimit: (board) => 2 * getSM(board),  // math.max(2 * getSM(board), 12),
+        description: "split should not exceed in the aggregate in length (in inches) twice the surface measure",
       }),
     ],
   },
-  FASSEL: {
+  FAS_SEL: {
     minBoardSize: {
       height: math.unit(4, "inch"),
       width: math.unit(6, "feet"),
@@ -208,7 +257,153 @@ const GRADES = {
     yieldFactorExtra: 11,
     getNumCuts: (sm) => Math.min(Math.max(Math.floor(sm / 4.0), 1), 4),
     allowsExtraCut: (sm) => 6 <= sm && sm <= 15,
-    defectLimits: [],
+    defectLimits: [
+      new DefectLimits({
+        defectType: "SOUND_KNOT",
+        aggregation: "max",
+        sizeType: "diameter",
+        getDefectValue: (value) =>
+          math.multiply(value, RESOLUTION).to("inch").toNumber(),
+        getLimit: (board) => getSM(board) / 3,
+        description: "the diameter of any sound knot (in inches) should be less than one-third of the surface measure (in feet)",
+      }),
+      new DefectLimits({
+        defectType: "UNSOUND_KNOT",
+        aggregation: "max",
+        sizeType: "diameter",
+        getDefectValue: (value) =>
+          math.multiply(value, RESOLUTION).to("inch").toNumber(),
+        getLimit: (board) => getSM(board) / 3,
+        description: "the diameter of any unsound knot (in inches) should be less than one-third of the surface measure (in feet)",
+      }),
+      new DefectLimits({
+        defectType: "PITH",
+        aggregation: "sum",
+        sizeType: "length",
+        getDefectValue: (value) =>
+          math.multiply(value, RESOLUTION).to("inch").toNumber(),
+        getLimit: (board) => getSM(board),
+        description: "pith in the aggregate in length (in inches) should not exceed the surface measure (in feet)",
+      }),
+      new DefectLimits({
+        defectType: "WANE",
+        aggregation: "max-sum-edge",
+        sizeType: "length",
+        getDefectValue: (value) =>
+          math.multiply(value, RESOLUTION).to("feet").toNumber(),
+        getLimit: (board) => board.toSize().width.to("feet").toNumber() / 2,
+        description: "wane on either edge should not exceed over one-half of the length in the aggregate",
+      }),
+      new DefectLimits({
+        defectType: "SPLIT_OR_SHAKE",
+        aggregation: "sum",
+        sizeType: "length",
+        getDefectValue: (value) =>
+          math.multiply(value, RESOLUTION).to("inch").toNumber(),
+        getLimit: (board) => math.max(2 * getSM(board), 12),
+        description: "split should not exceed in the aggregate in length (in inches) twice the surface measure",
+      }),
+    ],
+  },
+  No1COM_F1F: {
+    minBoardSize: {
+      height: math.unit(3, "inch"),
+      width: math.unit(4, "feet"),
+    },
+    minCutSizes: [
+      {
+        height: math.unit(4, "inch"),
+        width: math.unit(2, "feet"),
+      },
+      {
+        height: math.unit(3, "inch"),
+        width: math.unit(3, "feet"),
+      },
+    ],
+    yieldFactor: 8,
+    yieldFactorExtra: 9,
+    getNumCuts: (sm) => Math.min(Math.max(Math.floor((sm + 1) / 3.0), 1), 5),
+    allowsExtraCut: (sm) => 3 <= sm && sm <= 10,
+    defectLimits: [
+      new DefectLimits({
+        defectType: "WANE",
+        aggregation: "max-sum-edge",
+        sizeType: "length",
+        getDefectValue: (value) =>
+          math.multiply(value, RESOLUTION).to("feet").toNumber(),
+        getLimit: (board) => board.toSize().width.to("feet").toNumber() / 2,
+        description: "wane on either edge should not exceed over one-half of the length in the aggregate",
+      }),
+      new DefectLimits({
+        defectType: "WANE",
+        aggregation: "sum-max-edge",
+        sizeType: "width",
+        getDefectValue: (value) =>
+          math.multiply(value, RESOLUTION).to("inch").toNumber(),
+        getLimit: (board) => board.toSize().height.to("inch").toNumber() / 3,
+        description: "the width of the wane from both edged, when added together, cannot exceed one-third of the total width",
+      }),
+    ],
+  },
+  No1COM_SEL: {
+    minBoardSize: {
+      height: math.unit(3, "inch"),
+      width: math.unit(4, "feet"),
+    },
+    minCutSizes: [
+      {
+        height: math.unit(4, "inch"),
+        width: math.unit(2, "feet"),
+      },
+      {
+        height: math.unit(3, "inch"),
+        width: math.unit(3, "feet"),
+      },
+    ],
+    yieldFactor: 8,
+    yieldFactorExtra: 9,
+    getNumCuts: (sm) => Math.min(Math.max(Math.floor((sm + 1) / 3.0), 1), 5),
+    allowsExtraCut: (sm) => 3 <= sm && sm <= 10,
+    defectLimits: [
+      new DefectLimits({
+        defectType: "WANE",
+        aggregation: "sum-max-edge",
+        sizeType: "width",
+        getDefectValue: (value) =>
+          math.multiply(value, RESOLUTION).to("feet").toNumber(),
+        getLimit: (board) => board.toSize().height.to("feet").toNumber() / 3,
+        description: "the width of the wane from both edged, when added together, cannot exceed one-third of the total width",
+      }),
+      new (class {
+        areWithinLimits(defects, board, returnInfo = false) {
+          let dl;
+          if (6 <= board.toSize().height.to("inch").toNumber()) {
+            dl = new DefectLimits({
+              defectType: "WANE",
+              aggregation: "max-sum-edge",
+              sizeType: "length",
+              getDefectValue: (value) =>
+                math.multiply(value, RESOLUTION).to("inch").toNumber(),
+              getLimit: (board) =>
+                board.toSize().width.to("inch").toNumber() / 2,
+              description: "in pieces 6\" or wider, the total length of wane on either edge cannot exceed one-half of the length",
+            });
+          } else {
+            dl = new DefectLimits({
+              defectType: "WANE",
+              aggregation: "sum-edge",
+              sizeType: "length",
+              getDefectValue: (value) =>
+                math.multiply(value, RESOLUTION).to("feet").toNumber(),
+              getLimit: (board) =>
+                board.toSize().width.to("feet").toNumber() / 2,
+              description: "in pieces 4\" or 5\" wide, the total length of wane, when added together, cannot exceed one-half of the length",
+            });
+          }
+          return dl.areWithinLimits(defects, board, returnInfo);
+        }
+      })(),
+    ],
   },
   No1COM: {
     minBoardSize: {
@@ -610,6 +805,7 @@ class Renderer {
       const checkmark = dlr[0] ? "fa-check-circle" : "fa-circle";
       const innerHTML =
         `<td>${dlr[1].defectType}</td>` +
+        `<td class="text-muted"><small>${dlr[1].description}</small></td>` +
         `<td>${dlr[1].defectValue.toFixed(2)}</td>` +
         `<td>${dlr[1].limit.toFixed(2)}</td>` +
         `<td class="text-right"><i class="far ${checkmark}"></i></td>`;
@@ -666,7 +862,7 @@ $("select#grade").on("change", (event) => {
 
 $("#load-cuts").on("click", () => {
   let gradesAndCuts = DATA[state.boardId].cuts[state.boardSide];
-  let gc = _.find(gradesAndCuts, ([g]) => g === state.grade);
+  let gc = _.find(gradesAndCuts, ([g]) => g === state.grade.split("_")[0]);
   if (gc === undefined) {
     gc = _.last(gradesAndCuts);
   }
