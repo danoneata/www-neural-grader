@@ -537,7 +537,7 @@ function getCuttingUnits(cut) {
 }
 
 function getSM(board) {
-  const s = board.toSize(round=true);
+  const s = board.toSize(true);
   return Math.round((s.width.toNumber() * s.height.toNumber()) / 12);
 }
 
