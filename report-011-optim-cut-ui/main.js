@@ -54,11 +54,14 @@ class Rectangle {
       this.bottom > other.top
     );
   }
-  toSize() {
-    return {
-      width: math.multiply(this.width, RESOLUTION).to("feet"),
-      height: math.multiply(this.height, RESOLUTION).to("inch"),
-    };
+  toSize(toRound = false) {
+    let w = math.multiply(this.width, RESOLUTION).to("feet");
+    let h = math.multiply(this.height, RESOLUTION).to("inch");
+    if (toRound) {
+      w = math.unit(Math.floor(w.toNumber()), "feet");
+      h = math.unit(Math.round(h.toNumber()), "inch");
+    }
+    return { width: w, height: h };
   }
 }
 
@@ -198,7 +201,7 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => getSM(board) / 3,
-        description: "the diameter of any sound knot (in inches) should be less than one-third of the surface measure (in feet)",
+        description: "the average diameter of any sound knot (in inches) should be less than one-third of the surface measure",
       }),
       new DefectLimits({
         defectType: "UNSOUND_KNOT",
@@ -207,7 +210,7 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => getSM(board) / 3,
-        description: "the diameter of any unsound knot (in inches) should be less than one-third of the surface measure (in feet)",
+        description: "the average diameter of any unsound knot (in inches) should be less than one-third of the surface measure",
       }),
       new DefectLimits({
         defectType: "PITH",
@@ -216,15 +219,15 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => getSM(board),
-        description: "pith in the aggregate in length (in inches) should not exceed the surface measure (in feet)",
+        description: "pith in the aggregate in length (in inches) should not exceed the surface measure",
       }),
       new DefectLimits({
         defectType: "WANE",
         aggregation: "max-sum-edge",
         sizeType: "length",
         getDefectValue: (value) =>
-          math.multiply(value, RESOLUTION).to("feet").toNumber(),
-        getLimit: (board) => board.toSize().width.to("feet").toNumber() / 2,
+          math.multiply(value, RESOLUTION).to("inch").toNumber(),
+        getLimit: (board) => board.toSize(true).width.to("inch").toNumber() / 2,
         description: "wane on either edge should not exceed over one-half of the length in the aggregate",
       }),
       new DefectLimits({
@@ -233,7 +236,7 @@ const GRADES = {
         sizeType: "length",
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
-        getLimit: (board) => 2 * getSM(board),  // math.max(2 * getSM(board), 12),
+        getLimit: (board) => math.max(2 * getSM(board), 12),
         description: "split should not exceed in the aggregate in length (in inches) twice the surface measure",
       }),
     ],
@@ -265,7 +268,7 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => getSM(board) / 3,
-        description: "the diameter of any sound knot (in inches) should be less than one-third of the surface measure (in feet)",
+        description: "the average diameter of any sound knot (in inches) should be less than one-third of the surface measure",
       }),
       new DefectLimits({
         defectType: "UNSOUND_KNOT",
@@ -274,7 +277,7 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => getSM(board) / 3,
-        description: "the diameter of any unsound knot (in inches) should be less than one-third of the surface measure (in feet)",
+        description: "the average diameter of any unsound knot (in inches) should be less than one-third of the surface measure",
       }),
       new DefectLimits({
         defectType: "PITH",
@@ -283,15 +286,15 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => getSM(board),
-        description: "pith in the aggregate in length (in inches) should not exceed the surface measure (in feet)",
+        description: "pith in the aggregate in length (in inches) should not exceed the surface measure",
       }),
       new DefectLimits({
         defectType: "WANE",
         aggregation: "max-sum-edge",
         sizeType: "length",
         getDefectValue: (value) =>
-          math.multiply(value, RESOLUTION).to("feet").toNumber(),
-        getLimit: (board) => board.toSize().width.to("feet").toNumber() / 2,
+          math.multiply(value, RESOLUTION).to("inch").toNumber(),
+        getLimit: (board) => board.toSize(true).width.to("inch").toNumber() / 2,
         description: "wane on either edge should not exceed over one-half of the length in the aggregate",
       }),
       new DefectLimits({
@@ -330,8 +333,8 @@ const GRADES = {
         aggregation: "max-sum-edge",
         sizeType: "length",
         getDefectValue: (value) =>
-          math.multiply(value, RESOLUTION).to("feet").toNumber(),
-        getLimit: (board) => board.toSize().width.to("feet").toNumber() / 2,
+          math.multiply(value, RESOLUTION).to("inch").toNumber(),
+        getLimit: (board) => board.toSize(true).width.to("inch").toNumber() / 2,
         description: "wane on either edge should not exceed over one-half of the length in the aggregate",
       }),
       new DefectLimits({
@@ -340,8 +343,8 @@ const GRADES = {
         sizeType: "width",
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
-        getLimit: (board) => board.toSize().height.to("inch").toNumber() / 3,
-        description: "the width of the wane from both edged, when added together, cannot exceed one-third of the total width",
+        getLimit: (board) => board.toSize(true).height.to("inch").toNumber() / 3,
+        description: "the width of the wane from both edges, when added together, cannot exceed one-third of the total width",
       }),
     ],
   },
@@ -370,14 +373,14 @@ const GRADES = {
         aggregation: "sum-max-edge",
         sizeType: "width",
         getDefectValue: (value) =>
-          math.multiply(value, RESOLUTION).to("feet").toNumber(),
-        getLimit: (board) => board.toSize().height.to("feet").toNumber() / 3,
-        description: "the width of the wane from both edged, when added together, cannot exceed one-third of the total width",
+          math.multiply(value, RESOLUTION).to("inch").toNumber(),
+        getLimit: (board) => board.toSize(true).height.to("inch").toNumber() / 3,
+        description: "the width of the wane from both edges, when added together, cannot exceed one-third of the total width",
       }),
       new (class {
         areWithinLimits(defects, board, returnInfo = false) {
           let dl;
-          if (6 <= board.toSize().height.to("inch").toNumber()) {
+          if (6 <= board.toSize(true).height.to("inch").toNumber()) {
             dl = new DefectLimits({
               defectType: "WANE",
               aggregation: "max-sum-edge",
@@ -385,7 +388,7 @@ const GRADES = {
               getDefectValue: (value) =>
                 math.multiply(value, RESOLUTION).to("inch").toNumber(),
               getLimit: (board) =>
-                board.toSize().width.to("inch").toNumber() / 2,
+                board.toSize(true).width.to("inch").toNumber() / 2,
               description: "in pieces 6\" or wider, the total length of wane on either edge cannot exceed one-half of the length",
             });
           } else {
@@ -394,9 +397,9 @@ const GRADES = {
               aggregation: "sum-edge",
               sizeType: "length",
               getDefectValue: (value) =>
-                math.multiply(value, RESOLUTION).to("feet").toNumber(),
+                math.multiply(value, RESOLUTION).to("inch").toNumber(),
               getLimit: (board) =>
-                board.toSize().width.to("feet").toNumber() / 2,
+                board.toSize(true).width.to("inch").toNumber() / 2,
               description: "in pieces 4\" or 5\" wide, the total length of wane, when added together, cannot exceed one-half of the length",
             });
           }
@@ -424,7 +427,17 @@ const GRADES = {
     yieldFactorExtra: 9,
     getNumCuts: (sm) => Math.min(Math.max(Math.floor((sm + 1) / 3.0), 1), 5),
     allowsExtraCut: (sm) => 3 <= sm && sm <= 10,
-    defectLimits: [],
+    defectLimits: [
+      new DefectLimits({
+        defectType: "PITH",
+        aggregation: "sum",
+        sizeType: "length",
+        getDefectValue: (value) =>
+          math.multiply(value, RESOLUTION).to("inch").toNumber(),
+        getLimit: (board) => board.toSize(true).width.to("inch").toNumber() / 2,
+        description: "pith in the aggregate in length should not exceed one-half of the length of the board",
+      }),
+    ],
   },
   No2ACOM: {
     minBoardSize: {
@@ -524,7 +537,7 @@ function getCuttingUnits(cut) {
 }
 
 function getSM(board) {
-  const s = board.toSize();
+  const s = board.toSize(round=true);
   return Math.round((s.width.toNumber() * s.height.toNumber()) / 12);
 }
 

@@ -32,7 +32,15 @@
         This is an interactive application for wood grading reflecting the NHLA
         rules. We are showing a board with defects; your goal is to add cuts to
         yield the necessary cutting units and achieve the desired grade.
+        If you need some help with the interface, 
+        <a data-toggle="collapse" href="#ui-guide">click here to view some tips</a>.
       </p>
+      <div class="collapse" id="ui-guide">
+        <ul>
+            <li>Hovering over defects reveals theirs type and size.</li>
+            <li>The "snap to min. cut size" toggle (from the "Cuts" panel) allows you to easily fit cuts that have <i>exactly</i> the minimum cut size along a dimension.</li>
+        </ul>
+      </div>
       <div class="my-2" id="svg-canvas"></div>
       <div class="row">
         <div class="col-sm-6">
@@ -81,7 +89,7 @@
                   <select id="grade" class="custom-select">
                     <option value="FAS" selected>FAS</option>
                     <!--<option value="FASF1F">FAS/F1F</option>-->
-                    <option value="FAS_SEL">FAS/SEL</option>
+                    <option value="FAS_SEL">SEL</option>
                     <option value="No1COM_F1F">#1 COM/F1F</option>
                     <option value="No1COM_SEL">#1 COM/SEL</option>
                     <option value="No1COM">#1 COM</option>
@@ -122,6 +130,7 @@
                       </thead>
                       <tbody></tbody>
                     </table>
+                    <span class="text-muted">Note: All values from the table are in inches.</span>
                 </div>
               </li>
             </ul>
