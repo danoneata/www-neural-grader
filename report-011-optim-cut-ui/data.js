@@ -4564,28 +4564,38 @@ const data = [
                     "FAS",
                     [
                         {
-                            "bottom": 112.0,
-                            "left": 1632.0,
-                            "right": 3048.0,
-                            "top": 0
-                        },
-                        {
-                            "bottom": 112.0,
+                            "bottom": 164.0,
                             "left": 288.0,
-                            "right": 1632.0,
+                            "right": 2640.0,
+                            "top": 4.0
+                        }
+                    ]
+                ],
+                [
+                    "FAS_SEL",
+                    [
+                        {
+                            "bottom": 164.0,
+                            "left": 288.0,
+                            "right": 2640.0,
+                            "top": 4.0
+                        }
+                    ]
+                ],
+                [
+                    "No1COM_F1F",
+                    [
+                        {
+                            "bottom": 164.0,
+                            "left": 288.0,
+                            "right": 2472.0,
                             "top": 4.0
                         },
                         {
-                            "bottom": 188.0,
-                            "left": 1212.0,
-                            "right": 2640.0,
-                            "top": 112.0
-                        },
-                        {
-                            "bottom": 188.0,
-                            "left": 128.0,
-                            "right": 1196.0,
-                            "top": 112.0
+                            "bottom": 112.0,
+                            "left": 2472.0,
+                            "right": 3048.0,
+                            "top": 4.0
                         }
                     ]
                 ]
@@ -4909,107 +4919,6 @@ const data = [
         },
         "grade": "FAS",
         "name": "0505"
-    },
-    {
-        "board": {
-            "bottom": 116.0,
-            "left": 0,
-            "right": 2304.0,
-            "top": 0
-        },
-        "cuts": {
-            "back": [
-                [
-                    "FAS",
-                    [
-                        {
-                            "bottom": 116.0,
-                            "left": 0,
-                            "right": 2304.0,
-                            "top": 0
-                        }
-                    ]
-                ]
-            ],
-            "front": [
-                [
-                    "FAS",
-                    [
-                        {
-                            "bottom": 108.0,
-                            "left": 204.0,
-                            "right": 2304.0,
-                            "top": 4.0
-                        }
-                    ]
-                ],
-                [
-                    "FAS_SEL",
-                    [
-                        {
-                            "bottom": 108.0,
-                            "left": 204.0,
-                            "right": 2304.0,
-                            "top": 4.0
-                        }
-                    ]
-                ],
-                [
-                    "No1COM_F1F",
-                    [
-                        {
-                            "bottom": 112.0,
-                            "left": 384.0,
-                            "right": 2304.0,
-                            "top": 4.0
-                        }
-                    ]
-                ]
-            ]
-        },
-        "defects": {
-            "back": [],
-            "front": [
-                {
-                    "rect": {
-                        "bottom": 116.0,
-                        "left": 0.0,
-                        "right": 204.0,
-                        "top": 100.0
-                    },
-                    "type": "WANE"
-                },
-                {
-                    "rect": {
-                        "bottom": 116.0,
-                        "left": 204.0,
-                        "right": 228.0,
-                        "top": 108.0
-                    },
-                    "type": "WANE"
-                },
-                {
-                    "rect": {
-                        "bottom": 4.0,
-                        "left": 560.0,
-                        "right": 908.0,
-                        "top": 0.0
-                    },
-                    "type": "WANE"
-                },
-                {
-                    "rect": {
-                        "bottom": 116.0,
-                        "left": 844.0,
-                        "right": 1292.0,
-                        "top": 112.0
-                    },
-                    "type": "WANE"
-                }
-            ]
-        },
-        "grade": "FAS",
-        "name": "0307"
     },
     {
         "board": {
@@ -11177,17 +11086,6 @@ const data = [
                             "top": 8.0
                         }
                     ]
-                ],
-                [
-                    "No1COM_F1F",
-                    [
-                        {
-                            "bottom": 72.0,
-                            "left": 272.0,
-                            "right": 1536.0,
-                            "top": 8.0
-                        }
-                    ]
                 ]
             ]
         },
@@ -12073,27 +11971,15 @@ const data = [
                     "No1COM_F1F",
                     [
                         {
+                            "bottom": 72.0,
+                            "left": 984.0,
+                            "right": 2268.0,
+                            "top": 4.0
+                        },
+                        {
                             "bottom": 68.0,
                             "left": 0,
                             "right": 952.0,
-                            "top": 4.0
-                        },
-                        {
-                            "bottom": 76.0,
-                            "left": 984.0,
-                            "right": 1488.0,
-                            "top": 4.0
-                        },
-                        {
-                            "bottom": 96.0,
-                            "left": 1488.0,
-                            "right": 1872.0,
-                            "top": 4.0
-                        },
-                        {
-                            "bottom": 96.0,
-                            "left": 1884.0,
-                            "right": 2268.0,
                             "top": 4.0
                         }
                     ]
@@ -12102,27 +11988,15 @@ const data = [
                     "No1COM_SEL",
                     [
                         {
+                            "bottom": 72.0,
+                            "left": 984.0,
+                            "right": 2268.0,
+                            "top": 4.0
+                        },
+                        {
                             "bottom": 68.0,
                             "left": 0,
                             "right": 952.0,
-                            "top": 4.0
-                        },
-                        {
-                            "bottom": 76.0,
-                            "left": 984.0,
-                            "right": 1488.0,
-                            "top": 4.0
-                        },
-                        {
-                            "bottom": 96.0,
-                            "left": 1488.0,
-                            "right": 1872.0,
-                            "top": 4.0
-                        },
-                        {
-                            "bottom": 96.0,
-                            "left": 1884.0,
-                            "right": 2268.0,
                             "top": 4.0
                         }
                     ]
@@ -12131,27 +12005,15 @@ const data = [
                     "No1COM",
                     [
                         {
+                            "bottom": 72.0,
+                            "left": 984.0,
+                            "right": 2268.0,
+                            "top": 4.0
+                        },
+                        {
                             "bottom": 68.0,
                             "left": 0,
                             "right": 952.0,
-                            "top": 4.0
-                        },
-                        {
-                            "bottom": 76.0,
-                            "left": 984.0,
-                            "right": 1488.0,
-                            "top": 4.0
-                        },
-                        {
-                            "bottom": 96.0,
-                            "left": 1488.0,
-                            "right": 1872.0,
-                            "top": 4.0
-                        },
-                        {
-                            "bottom": 96.0,
-                            "left": 1884.0,
-                            "right": 2268.0,
                             "top": 4.0
                         }
                     ]
@@ -12650,190 +12512,6 @@ const data = [
     },
     {
         "board": {
-            "bottom": 96.0,
-            "left": 0,
-            "right": 1536.0,
-            "top": 0
-        },
-        "cuts": {
-            "back": [
-                [
-                    "FAS",
-                    [
-                        {
-                            "bottom": 96.0,
-                            "left": 0,
-                            "right": 1536.0,
-                            "top": 0
-                        }
-                    ]
-                ]
-            ],
-            "front": [
-                [
-                    "FAS",
-                    [
-                        {
-                            "bottom": 88.0,
-                            "left": 0,
-                            "right": 1536.0,
-                            "top": 8.0
-                        }
-                    ]
-                ],
-                [
-                    "FAS_SEL",
-                    [
-                        {
-                            "bottom": 88.0,
-                            "left": 0,
-                            "right": 1536.0,
-                            "top": 8.0
-                        }
-                    ]
-                ],
-                [
-                    "No1COM_F1F",
-                    [
-                        {
-                            "bottom": 88.0,
-                            "left": 0,
-                            "right": 1536.0,
-                            "top": 8.0
-                        }
-                    ]
-                ]
-            ]
-        },
-        "defects": {
-            "back": [],
-            "front": [
-                {
-                    "rect": {
-                        "bottom": 8.0,
-                        "left": 460.0,
-                        "right": 856.0,
-                        "top": 0.0
-                    },
-                    "type": "WANE"
-                },
-                {
-                    "rect": {
-                        "bottom": 96.0,
-                        "left": 288.0,
-                        "right": 756.0,
-                        "top": 88.0
-                    },
-                    "type": "WANE"
-                }
-            ]
-        },
-        "grade": "FAS",
-        "name": "0135"
-    },
-    {
-        "board": {
-            "bottom": 96.0,
-            "left": 0,
-            "right": 1548.0,
-            "top": 0
-        },
-        "cuts": {
-            "back": [
-                [
-                    "FAS",
-                    [
-                        {
-                            "bottom": 96.0,
-                            "left": 0,
-                            "right": 1548.0,
-                            "top": 0
-                        }
-                    ]
-                ]
-            ],
-            "front": [
-                [
-                    "FAS",
-                    [
-                        {
-                            "bottom": 96.0,
-                            "left": 0,
-                            "right": 1548.0,
-                            "top": 12.0
-                        }
-                    ]
-                ],
-                [
-                    "FAS_SEL",
-                    [
-                        {
-                            "bottom": 96.0,
-                            "left": 0,
-                            "right": 1548.0,
-                            "top": 12.0
-                        }
-                    ]
-                ],
-                [
-                    "No1COM_F1F",
-                    [
-                        {
-                            "bottom": 96.0,
-                            "left": 0,
-                            "right": 1548.0,
-                            "top": 32.0
-                        }
-                    ]
-                ]
-            ]
-        },
-        "defects": {
-            "back": [],
-            "front": [
-                {
-                    "rect": {
-                        "bottom": 12.0,
-                        "left": 0.0,
-                        "right": 200.0,
-                        "top": 0.0
-                    },
-                    "type": "WANE"
-                },
-                {
-                    "rect": {
-                        "bottom": 8.0,
-                        "left": 200.0,
-                        "right": 296.0,
-                        "top": 0.0
-                    },
-                    "type": "WANE"
-                },
-                {
-                    "rect": {
-                        "bottom": 12.0,
-                        "left": 560.0,
-                        "right": 844.0,
-                        "top": 0.0
-                    },
-                    "type": "WANE"
-                },
-                {
-                    "rect": {
-                        "bottom": 8.0,
-                        "left": 844.0,
-                        "right": 908.0,
-                        "top": 0.0
-                    },
-                    "type": "WANE"
-                }
-            ]
-        },
-        "grade": "FAS",
-        "name": "0142"
-    },
-    {
-        "board": {
             "bottom": 184.0,
             "left": 0,
             "right": 3072.0,
@@ -13220,27 +12898,15 @@ const data = [
                     [
                         {
                             "bottom": 116.0,
-                            "left": 464.0,
+                            "left": 452.0,
                             "right": 1584.0,
                             "top": 16.0
                         },
                         {
                             "bottom": 116.0,
-                            "left": 1588.0,
-                            "right": 2676.0,
-                            "top": 60.0
-                        },
-                        {
-                            "bottom": 60.0,
                             "left": 1964.0,
                             "right": 2656.0,
                             "top": 0
-                        },
-                        {
-                            "bottom": 108.0,
-                            "left": 80.0,
-                            "right": 464.0,
-                            "top": 36.0
                         }
                     ]
                 ],
@@ -13249,27 +12915,15 @@ const data = [
                     [
                         {
                             "bottom": 116.0,
-                            "left": 464.0,
+                            "left": 452.0,
                             "right": 1584.0,
                             "top": 16.0
                         },
                         {
                             "bottom": 116.0,
-                            "left": 1588.0,
-                            "right": 2676.0,
-                            "top": 60.0
-                        },
-                        {
-                            "bottom": 60.0,
                             "left": 1964.0,
                             "right": 2656.0,
                             "top": 0
-                        },
-                        {
-                            "bottom": 108.0,
-                            "left": 80.0,
-                            "right": 464.0,
-                            "top": 36.0
                         }
                     ]
                 ],
@@ -13278,27 +12932,15 @@ const data = [
                     [
                         {
                             "bottom": 116.0,
-                            "left": 464.0,
+                            "left": 452.0,
                             "right": 1584.0,
                             "top": 16.0
                         },
                         {
                             "bottom": 116.0,
-                            "left": 1588.0,
-                            "right": 2676.0,
-                            "top": 60.0
-                        },
-                        {
-                            "bottom": 60.0,
                             "left": 1964.0,
                             "right": 2656.0,
                             "top": 0
-                        },
-                        {
-                            "bottom": 108.0,
-                            "left": 80.0,
-                            "right": 464.0,
-                            "top": 36.0
                         }
                     ]
                 ],
@@ -14039,199 +13681,6 @@ const data = [
         },
         "grade": "2AC",
         "name": "2848"
-    },
-    {
-        "board": {
-            "bottom": 140.0,
-            "left": 0,
-            "right": 1548.0,
-            "top": 0
-        },
-        "cuts": {
-            "back": [
-                [
-                    "FAS",
-                    [
-                        {
-                            "bottom": 88.0,
-                            "left": 0,
-                            "right": 1228.0,
-                            "top": 0
-                        }
-                    ]
-                ],
-                [
-                    "FAS_SEL",
-                    [
-                        {
-                            "bottom": 88.0,
-                            "left": 0,
-                            "right": 1228.0,
-                            "top": 0
-                        }
-                    ]
-                ],
-                [
-                    "No1COM_F1F",
-                    [
-                        {
-                            "bottom": 140.0,
-                            "left": 0,
-                            "right": 672.0,
-                            "top": 0
-                        },
-                        {
-                            "bottom": 140.0,
-                            "left": 680.0,
-                            "right": 1076.0,
-                            "top": 0
-                        }
-                    ]
-                ]
-            ],
-            "front": [
-                [
-                    "FAS",
-                    [
-                        {
-                            "bottom": 136.0,
-                            "left": 0,
-                            "right": 1548.0,
-                            "top": 16.0
-                        }
-                    ]
-                ],
-                [
-                    "FAS_SEL",
-                    [
-                        {
-                            "bottom": 136.0,
-                            "left": 0,
-                            "right": 1548.0,
-                            "top": 16.0
-                        }
-                    ]
-                ],
-                [
-                    "No1COM_F1F",
-                    [
-                        {
-                            "bottom": 136.0,
-                            "left": 0,
-                            "right": 1548.0,
-                            "top": 16.0
-                        }
-                    ]
-                ]
-            ]
-        },
-        "defects": {
-            "back": [
-                {
-                    "rect": {
-                        "bottom": 68.0,
-                        "left": 1228.0,
-                        "right": 1236.0,
-                        "top": 56.0
-                    },
-                    "type": "BARK_POCKET"
-                },
-                {
-                    "rect": {
-                        "bottom": 68.0,
-                        "left": 1236.0,
-                        "right": 1252.0,
-                        "top": 60.0
-                    },
-                    "type": "BARK_POCKET"
-                },
-                {
-                    "rect": {
-                        "bottom": 92.0,
-                        "left": 672.0,
-                        "right": 680.0,
-                        "top": 88.0
-                    },
-                    "type": "BARK_POCKET"
-                },
-                {
-                    "rect": {
-                        "bottom": 140.0,
-                        "left": 1076.0,
-                        "right": 1468.0,
-                        "top": 136.0
-                    },
-                    "type": "VOID"
-                }
-            ],
-            "front": [
-                {
-                    "rect": {
-                        "bottom": 8.0,
-                        "left": 0.0,
-                        "right": 144.0,
-                        "top": 0.0
-                    },
-                    "type": "WANE"
-                },
-                {
-                    "rect": {
-                        "bottom": 12.0,
-                        "left": 144.0,
-                        "right": 252.0,
-                        "top": 0.0
-                    },
-                    "type": "WANE"
-                },
-                {
-                    "rect": {
-                        "bottom": 16.0,
-                        "left": 252.0,
-                        "right": 520.0,
-                        "top": 0.0
-                    },
-                    "type": "WANE"
-                },
-                {
-                    "rect": {
-                        "bottom": 12.0,
-                        "left": 520.0,
-                        "right": 596.0,
-                        "top": 0.0
-                    },
-                    "type": "WANE"
-                },
-                {
-                    "rect": {
-                        "bottom": 8.0,
-                        "left": 596.0,
-                        "right": 640.0,
-                        "top": 0.0
-                    },
-                    "type": "WANE"
-                },
-                {
-                    "rect": {
-                        "bottom": 8.0,
-                        "left": 832.0,
-                        "right": 944.0,
-                        "top": 0.0
-                    },
-                    "type": "WANE"
-                },
-                {
-                    "rect": {
-                        "bottom": 140.0,
-                        "left": 1076.0,
-                        "right": 1468.0,
-                        "top": 136.0
-                    },
-                    "type": "VOID"
-                }
-            ]
-        },
-        "grade": "F1F",
-        "name": "0922"
     },
     {
         "board": {
@@ -15034,6 +14483,123 @@ const data = [
         },
         "grade": "3AC",
         "name": "3379"
+    },
+    {
+        "board": {
+            "bottom": 68.0,
+            "left": 0,
+            "right": 1184.0,
+            "top": 0
+        },
+        "cuts": {
+            "back": [
+                [
+                    "FAS",
+                    []
+                ],
+                [
+                    "FAS_SEL",
+                    []
+                ],
+                [
+                    "No1COM_F1F",
+                    [
+                        {
+                            "bottom": 64.0,
+                            "left": 0,
+                            "right": 908.0,
+                            "top": 0
+                        }
+                    ]
+                ]
+            ],
+            "front": [
+                [
+                    "FAS",
+                    [
+                        {
+                            "bottom": 64.0,
+                            "left": 0,
+                            "right": 968.0,
+                            "top": 0
+                        }
+                    ]
+                ],
+                [
+                    "FAS_SEL",
+                    [
+                        {
+                            "bottom": 64.0,
+                            "left": 0,
+                            "right": 968.0,
+                            "top": 0
+                        }
+                    ]
+                ]
+            ]
+        },
+        "defects": {
+            "back": [
+                {
+                    "rect": {
+                        "bottom": 36.0,
+                        "left": 908.0,
+                        "right": 924.0,
+                        "top": 32.0
+                    },
+                    "type": "BARK_POCKET"
+                },
+                {
+                    "rect": {
+                        "bottom": 68.0,
+                        "left": 0.0,
+                        "right": 640.0,
+                        "top": 64.0
+                    },
+                    "type": "VOID"
+                }
+            ],
+            "front": [
+                {
+                    "rect": {
+                        "bottom": 68.0,
+                        "left": 0.0,
+                        "right": 640.0,
+                        "top": 64.0
+                    },
+                    "type": "VOID"
+                },
+                {
+                    "rect": {
+                        "bottom": 68.0,
+                        "left": 968.0,
+                        "right": 1052.0,
+                        "top": 56.0
+                    },
+                    "type": "WANE"
+                },
+                {
+                    "rect": {
+                        "bottom": 68.0,
+                        "left": 1052.0,
+                        "right": 1156.0,
+                        "top": 48.0
+                    },
+                    "type": "WANE"
+                },
+                {
+                    "rect": {
+                        "bottom": 68.0,
+                        "left": 1156.0,
+                        "right": 1184.0,
+                        "top": 40.0
+                    },
+                    "type": "WANE"
+                }
+            ]
+        },
+        "grade": "1C",
+        "name": "1326"
     },
     {
         "board": {
