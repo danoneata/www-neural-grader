@@ -835,7 +835,7 @@ class Renderer {
 
     // overall grade
     {
-      const hasGrade = hasMinSize && hasMinCutSize && hasReqCuttingUnits;
+      const hasGrade = hasMinSize && hasMinCutSize && hasReqCuttingUnits && hasDefectLimits;
       const textColor = hasGrade ? "text-success" : "text-danger";
       const checkmark = hasGrade ? "fa-check-circle" : "fa-circle";
       $("#grade-label").attr("class", "my-1 mr-2 " + textColor);
