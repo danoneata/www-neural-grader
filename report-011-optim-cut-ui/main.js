@@ -29,6 +29,9 @@ class Rectangle {
   get height() {
     return this.bottom - this.top;
   }
+  get area() {
+    return this.width * this.height;
+  }
   moveTo(point) {
     const w = this.width;
     const h = this.height;
@@ -59,14 +62,24 @@ class Rectangle {
     let h = math.multiply(this.height, RESOLUTION).to("inch");
     if (toRound) {
       w = math.unit(Math.floor(w.toNumber()), "feet");
-      h = math.unit(Math.round(h.toNumber()), "inch");
+      // h = math.unit(Math.round(h.toNumber()), "inch");
     }
     return { width: w, height: h };
+  }
+  toStr() {
+    return `${this.left} ${this.top} ${this.right} ${this.bottom}`;
   }
 }
 
 class DefectLimits {
-  constructor({ defectType, aggregation, sizeType, getDefectValue, getLimit, description }) {
+  constructor({
+    defectType,
+    aggregation,
+    sizeType,
+    getDefectValue,
+    getLimit,
+    description,
+  }) {
     const AGG_FUNCS = {
       sum: (defects) => {
         return defects.map((d) => d.size).reduce((acc, d) => acc + d, 0);
@@ -153,14 +166,14 @@ const COLORS = {
   // particular defects
   STAIN: "#156064",
   CHECKS: "#247ba0",
-  SOUND_KNOT: "#b388eb",
-  UNSOUND_KNOT: "#5e503f",
-  WANE: "#772f1a",
-  SPLIT_OR_SHAKE: "#7678ed",
-  PITH: "#ff1654",
-  HOLE: "#87c38f",
-  DECAY: "#cfd7c7",
-  BARK_POCKET: "#11151c",
+  SOUND_KNOT: "#5c3307",
+  UNSOUND_KNOT: "#4a2702",
+  WANE: "#716348",
+  SPLIT_OR_SHAKE: "#e7d8c9",
+  PITH: "#320310",
+  HOLE: "#151b2e",
+  DECAY: "#5e5a57",
+  BARK_POCKET: "#1a1108",
   VOID: "#143642",
 };
 
@@ -201,7 +214,8 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => getSM(board) / 3,
-        description: "the average diameter of any sound knot (in inches) should be less than one-third of the surface measure",
+        description:
+          "the average diameter of any sound knot (in inches) should be less than one-third of the surface measure",
       }),
       new DefectLimits({
         defectType: "UNSOUND_KNOT",
@@ -210,7 +224,8 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => getSM(board) / 3,
-        description: "the average diameter of any unsound knot (in inches) should be less than one-third of the surface measure",
+        description:
+          "the average diameter of any unsound knot (in inches) should be less than one-third of the surface measure",
       }),
       new DefectLimits({
         defectType: "PITH",
@@ -219,7 +234,8 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => getSM(board),
-        description: "pith in the aggregate in length (in inches) should not exceed the surface measure",
+        description:
+          "pith in the aggregate in length (in inches) should not exceed the surface measure",
       }),
       new DefectLimits({
         defectType: "WANE",
@@ -228,7 +244,8 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => board.toSize(true).width.to("inch").toNumber() / 2,
-        description: "wane on either edge should not exceed over one-half of the length in the aggregate",
+        description:
+          "wane on either edge should not exceed over one-half of the length in the aggregate",
       }),
       new DefectLimits({
         defectType: "SPLIT_OR_SHAKE",
@@ -237,7 +254,8 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => math.max(2 * getSM(board), 12),
-        description: "split should not exceed in the aggregate in length (in inches) twice the surface measure",
+        description:
+          "split should not exceed in the aggregate in length (in inches) twice the surface measure",
       }),
     ],
   },
@@ -268,7 +286,8 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => getSM(board) / 3,
-        description: "the average diameter of any sound knot (in inches) should be less than one-third of the surface measure",
+        description:
+          "the average diameter of any sound knot (in inches) should be less than one-third of the surface measure",
       }),
       new DefectLimits({
         defectType: "UNSOUND_KNOT",
@@ -277,7 +296,8 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => getSM(board) / 3,
-        description: "the average diameter of any unsound knot (in inches) should be less than one-third of the surface measure",
+        description:
+          "the average diameter of any unsound knot (in inches) should be less than one-third of the surface measure",
       }),
       new DefectLimits({
         defectType: "PITH",
@@ -286,7 +306,8 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => getSM(board),
-        description: "pith in the aggregate in length (in inches) should not exceed the surface measure",
+        description:
+          "pith in the aggregate in length (in inches) should not exceed the surface measure",
       }),
       new DefectLimits({
         defectType: "WANE",
@@ -295,7 +316,8 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => board.toSize(true).width.to("inch").toNumber() / 2,
-        description: "wane on either edge should not exceed over one-half of the length in the aggregate",
+        description:
+          "wane on either edge should not exceed over one-half of the length in the aggregate",
       }),
       new DefectLimits({
         defectType: "SPLIT_OR_SHAKE",
@@ -304,7 +326,8 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => math.max(2 * getSM(board), 12),
-        description: "split should not exceed in the aggregate in length (in inches) twice the surface measure",
+        description:
+          "split should not exceed in the aggregate in length (in inches) twice the surface measure",
       }),
     ],
   },
@@ -335,7 +358,8 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => board.toSize(true).width.to("inch").toNumber() / 2,
-        description: "wane on either edge should not exceed over one-half of the length in the aggregate",
+        description:
+          "wane on either edge should not exceed over one-half of the length in the aggregate",
       }),
       new DefectLimits({
         defectType: "WANE",
@@ -343,8 +367,10 @@ const GRADES = {
         sizeType: "width",
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
-        getLimit: (board) => board.toSize(true).height.to("inch").toNumber() / 3,
-        description: "the width of the wane from both edges, when added together, cannot exceed one-third of the total width",
+        getLimit: (board) =>
+          board.toSize(true).height.to("inch").toNumber() / 3,
+        description:
+          "the width of the wane from both edges, when added together, cannot exceed one-third of the total width",
       }),
     ],
   },
@@ -374,8 +400,10 @@ const GRADES = {
         sizeType: "width",
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
-        getLimit: (board) => board.toSize(true).height.to("inch").toNumber() / 3,
-        description: "the width of the wane from both edges, when added together, cannot exceed one-third of the total width",
+        getLimit: (board) =>
+          board.toSize(true).height.to("inch").toNumber() / 3,
+        description:
+          "the width of the wane from both edges, when added together, cannot exceed one-third of the total width",
       }),
       new (class {
         areWithinLimits(defects, board, returnInfo = false) {
@@ -389,7 +417,8 @@ const GRADES = {
                 math.multiply(value, RESOLUTION).to("inch").toNumber(),
               getLimit: (board) =>
                 board.toSize(true).width.to("inch").toNumber() / 2,
-              description: "in pieces 6\" or wider, the total length of wane on either edge cannot exceed one-half of the length",
+              description:
+                'in pieces 6" or wider, the total length of wane on either edge cannot exceed one-half of the length',
             });
           } else {
             dl = new DefectLimits({
@@ -400,7 +429,8 @@ const GRADES = {
                 math.multiply(value, RESOLUTION).to("inch").toNumber(),
               getLimit: (board) =>
                 board.toSize(true).width.to("inch").toNumber() / 2,
-              description: "in pieces 4\" or 5\" wide, the total length of wane, when added together, cannot exceed one-half of the length",
+              description:
+                'in pieces 4" or 5" wide, the total length of wane, when added together, cannot exceed one-half of the length',
             });
           }
           return dl.areWithinLimits(defects, board, returnInfo);
@@ -435,7 +465,8 @@ const GRADES = {
         getDefectValue: (value) =>
           math.multiply(value, RESOLUTION).to("inch").toNumber(),
         getLimit: (board) => board.toSize(true).width.to("inch").toNumber() / 2,
-        description: "pith in the aggregate in length should not exceed one-half of the length of the board",
+        description:
+          "pith in the aggregate in length should not exceed one-half of the length of the board",
       }),
     ],
   },
@@ -454,6 +485,7 @@ const GRADES = {
     yieldFactorExtra: 8,
     getNumCuts: (sm) => Math.min(Math.max(Math.floor(sm / 2.0), 1), 7),
     allowsExtraCut: (sm) => 2 <= sm && 7 <= sm,
+    defectLimits: [],
   },
   No3ACOM: {
     minBoardSize: {
@@ -494,6 +526,7 @@ class State {
     this.offset = { x: 0, y: 0 };
     this.actionType = null;
     this.K = 1.5; // inverse scaling factor; display board smaller to fit in screen
+    this.startTime = Date.now();
   }
   get board() {
     return new Rectangle(DATA[this.boardId].board);
@@ -505,6 +538,9 @@ class State {
   }
   get trueGrade() {
     return DATA[this.boardId].grade;
+  }
+  get predGrade() {
+    return DATA[this.boardId].pred;
   }
   get boardId() {
     return DATA.findIndex((datum) => datum.name === this.boardName);
@@ -620,6 +656,7 @@ class Renderer {
     this.boardShape = null;
     this.defectShapes = [];
     this.cutShapes = [];
+    this.renderTimer();
   }
 
   renderAll(state) {
@@ -653,6 +690,20 @@ class Renderer {
       }
     }
     this.cutShapes = [];
+  }
+
+  renderTimer() {
+    setInterval(function () {
+      const diff = (Date.now() - state.startTime) / 1000;
+
+      let minutes = (diff / 60) | 0;
+      let seconds = diff % 60 | 0;
+
+      minutes = minutes < 10 ? "0" + minutes : minutes;
+      seconds = seconds < 10 ? "0" + seconds : seconds;
+
+      $("#timer").text(minutes + ":" + seconds);
+    }, 1000);
   }
 
   renderBoard(state) {
@@ -700,6 +751,8 @@ class Renderer {
     this.cutShapes[i] = this.drawRectShape(cut, this.cutShapes[i]);
     this.cutShapes[i].attr({
       fill: color,
+      stroke: "#444444",
+      "stroke-width": 0.5,
       index: i,
       type: "cut",
     });
@@ -741,6 +794,7 @@ class Renderer {
     const boardSize = state.board.toSize();
     $("#board-size").text(sizeToStr(boardSize, 2));
     $("#true-grade").text(SHORT_TO_LONG_GRADE[state.trueGrade]);
+    $("#pred-grade").text(SHORT_TO_LONG_GRADE[state.predGrade]);
     $("#sm").text(getSM(state.board));
   }
 
@@ -835,7 +889,8 @@ class Renderer {
 
     // overall grade
     {
-      const hasGrade = hasMinSize && hasMinCutSize && hasReqCuttingUnits && hasDefectLimits;
+      const hasGrade =
+        hasMinSize && hasMinCutSize && hasReqCuttingUnits && hasDefectLimits;
       const textColor = hasGrade ? "text-success" : "text-danger";
       const checkmark = hasGrade ? "fa-check-circle" : "fa-circle";
       $("#grade-label").attr("class", "my-1 mr-2 " + textColor);
@@ -860,6 +915,7 @@ $("select#board-name").on("change", (event) => {
   state.boardName = event.target.value;
   state.resetCuts();
   renderer.renderAll(state);
+  state.startTime = Date.now();
 });
 
 $("select#side").on("change", (event) => {
@@ -871,6 +927,12 @@ $("select#side").on("change", (event) => {
 $("select#grade").on("change", (event) => {
   state.grade = event.target.value;
   renderer.renderPanelGrade(state);
+});
+
+new Clipboard("#copy-cuts", {
+  text: function (trigger) {
+    return state.cuts.map((cut) => cut.toStr()).join("; ");
+  },
 });
 
 $("#load-cuts").on("click", () => {
@@ -885,11 +947,37 @@ $("#load-cuts").on("click", () => {
   renderer.renderPanelGrade(state);
 });
 
+// https://stackoverflow.com/a/43053803/474311
+const product = (...a) =>
+  a.reduce((a, b) => a.flatMap((d) => b.map((e) => [d, e].flat())));
+
+function getCandidates() {
+  const obstacles = [
+    ..._.pluck(state.defects, "rect"),
+    ..._.compact(state.cuts),
+  ];
+  const overlapsObstacles = (r) => obstacles.some((o) => r.overlaps(o));
+  const limL = [...obstacles.map((r) => r.right), state.board.left];
+  const limR = [...obstacles.map((r) => r.left), state.board.right];
+  const limT = [...obstacles.map((r) => r.bottom), state.board.top];
+  const limB = [...obstacles.map((r) => r.top), state.board.bottom];
+  return product(limL, limR, limT, limB)
+    .filter((t) => t[0] < t[1] && t[2] < t[3])
+    .map(
+      (t) => new Rectangle({ left: t[0], right: t[1], top: t[2], bottom: t[3] })
+    )
+    .filter((r) => !overlapsObstacles(r));
+}
+
 $("#add-cut").on("click", () => {
-  state.cuts.push(new Rectangle(DEFAULT_CUT));
-  renderer.renderCut(state, state.cuts.length - 1);
-  renderer.renderPanelGrade(state);
-  renderer.renderTotalCuttingUnits(state);
+  const candidates = getCandidates();
+  if (candidates.length > 0) {
+    const maxCandidate = _.max(candidates, (r) => r.area);
+    state.cuts.push(maxCandidate);
+    renderer.renderCut(state, state.cuts.length - 1);
+    renderer.renderPanelGrade(state);
+    renderer.renderTotalCuttingUnits(state);
+  }
 });
 
 $("table#cuts").on("click", (event) => {

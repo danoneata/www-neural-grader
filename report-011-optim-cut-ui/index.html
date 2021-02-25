@@ -22,6 +22,7 @@
       crossorigin="anonymous"
     ></script>
     <script src="https://kit.fontawesome.com/1591ccfa5c.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.4.0/clipboard.js"></script>
     <!--<script src="svg.select.js/src/svg.select.js"></script>-->
     <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.2.0/fabric.min.js"></script>-->
   </head>
@@ -37,7 +38,9 @@
       </p>
       <div class="collapse" id="ui-guide">
         <ul>
-            <li>Hovering over defects reveals theirs type and size.</li>
+            <li>You can resize and reposition each clear cut using the mouse.</li>
+            <li>To reveal the defect type and its size, hover with the mouse over it.</li>
+            <li>The "add cut" button from the "cuts" panel, adds the maximum-area clear cut available to the board.</li>
             <li>The "snap to min. cut size" toggle (from the "Cuts" panel) allows you to easily fit cuts that have <i>exactly</i> the minimum cut size along a dimension.</li>
         </ul>
       </div>
@@ -66,10 +69,16 @@
               </div>
             </div>
             <ul class="list-group list-group-flush">
+              <!--
               <li class="list-group-item">
                 <span class="text-secondary">expected grade:</span>
                 <span id="true-grade"></span>
               </li>
+              <li class="list-group-item">
+                <span class="text-secondary">predicted grade:</span>
+                <span id="pred-grade"></span>
+              </li>
+              -->
               <li class="list-group-item">
                 <span class="text-secondary">board size:</span>
                 <span id="board-size"></span>
@@ -144,8 +153,13 @@
                 <button class="my-1 btn btn-primary" id="add-cut">
                   Add cut
                 </button>
+                <!--
                 <button class="my-1 btn btn-light" id="load-cuts">
                   Load cuts
+                </button>
+                -->
+                <button class="my-1 btn btn-light" data-toggle="tooltip" title="Copied cuts!" data-trigger="click" id="copy-cuts">
+                  Copy
                 </button>
                 <div class="custom-control-inline custom-switch">
                   <input type="checkbox" class="custom-control-input" id="snap-switch">
@@ -166,6 +180,10 @@
                 <span class="text-secondary">total cutting units:</span>
                 <span id="total-cutting-units">0</span>
                 </p>
+              </div>
+              <div>
+                  <span class="text-secondary">elapsed time:</span>
+                  <span id="timer"></span>
               </div>
             </div>
           </div>
