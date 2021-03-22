@@ -67,9 +67,12 @@
                     </div>
                 </form>
               </div>
+              <div class="custom-control-inline custom-switch">
+                <input type="checkbox" class="custom-control-input" id="first-lineal-switch">
+                <label class="custom-control-label" for="first-lineal-switch">show first lineal regions</label>
+              </div>
             </div>
             <ul class="list-group list-group-flush">
-              <!--
               <li class="list-group-item">
                 <span class="text-secondary">expected grade:</span>
                 <span id="true-grade"></span>
@@ -78,10 +81,13 @@
                 <span class="text-secondary">predicted grade:</span>
                 <span id="pred-grade"></span>
               </li>
-              -->
               <li class="list-group-item">
                 <span class="text-secondary">board size:</span>
                 <span id="board-size"></span>
+              </li>
+              <li class="list-group-item">
+                <span class="text-secondary">measured width:</span>
+                <span id="measured-width"></span>
               </li>
               <li class="list-group-item">
                 <span class="text-secondary">surface measure (SM):</span>
@@ -142,6 +148,21 @@
                     <span class="text-muted">Note: All values from the table are in inches.</span>
                 </div>
               </li>
+              <li class="list-group-item" id="first-lineal-group">
+                <span id="first-lineal-label">first lineal rule:</span>
+                <span id="first-lineal-check" class="float-right"><i class="far fa-circle"></i></span>
+                <table id="first-lineal" class="table table-sm">
+                  <thead>
+                    <th>clear</th>
+                    <th>sound</th>
+                    <th>unsound</th>
+                    <th class="text-right">valid</th>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+                <span class="text-muted">Note: Percentage of clear, sound and unsound wood for each of the two first lineal regions.</span>
+              </li>
             </ul>
           </div>
         </div>
@@ -151,19 +172,21 @@
               <h5 class="card-title">Cuts</h5>
               <div class="card-text">
                 <button class="my-1 btn btn-primary" id="add-cut">
-                  Add cut
+                  Add
                 </button>
-                <!--
                 <button class="my-1 btn btn-light" id="load-cuts">
-                  Load cuts
+                  Load
                 </button>
-                -->
                 <button class="my-1 btn btn-light" data-toggle="tooltip" title="Copied cuts!" data-trigger="click" id="copy-cuts">
                   Copy
                 </button>
                 <div class="custom-control-inline custom-switch">
                   <input type="checkbox" class="custom-control-input" id="snap-switch">
                   <label class="custom-control-label" for="snap-switch">snap to min. cut size</label>
+                </div>
+                <div class="input-group mt-1 mb-2">
+                    <input type="text" class="form-control" placeholder="0 0 1924 92; 1924 0 2112 48" aria-label="cuts" aria-describedby="paste-cuts" id="paste-cuts-values">
+                    <button class="btn btn-outline-secondary" type="button" id="paste-cuts">Paste</button>
                 </div>
                 <table id="cuts" class="table table-sm">
                   <thead>

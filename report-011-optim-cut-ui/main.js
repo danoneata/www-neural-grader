@@ -71,6 +71,18 @@ class Rectangle {
   }
 }
 
+class Board extends Rectangle {
+  // A rectangle with extra information—the measured width. This value is
+  // specific to the 1998 Red Oak dataset. For the most cases it corresponds to
+  // the width of the board (`bottom`), but it can sometimes be smaller, when
+  // the board is not a perfect rectangle. The measured width is used to
+  // compute the surface measure.
+  constructor(board, measuredWidth) {
+    super(board);
+    this.measuredWidth = math.multiply(measuredWidth, RESOLUTION).to("inch");
+  }
+}
+
 class DefectLimits {
   constructor({
     defectType,
@@ -186,6 +198,11 @@ const SHORT_TO_LONG_GRADE = {
   "3AC": "#3A COM",
 };
 
+function getRequiredCuttingUnits(board) {
+  const sm = getSM(board);
+  return sm * this.yieldFactor;
+}
+
 const GRADES = {
   FAS: {
     minBoardSize: {
@@ -206,6 +223,9 @@ const GRADES = {
     yieldFactorExtra: 11,
     getNumCuts: (sm) => Math.min(Math.max(Math.floor(sm / 4.0), 1), 4),
     allowsExtraCut: (sm) => 6 <= sm && sm <= 15,
+    getRequiredCuttingUnits: function (board) {
+      return getRequiredCuttingUnits.bind(this)(board);
+    },
     defectLimits: [
       new DefectLimits({
         defectType: "SOUND_KNOT",
@@ -276,6 +296,15 @@ const GRADES = {
     ],
     yieldFactor: 10,
     yieldFactorExtra: 11,
+    getRequiredCuttingUnits: function (board) {
+      const sm = getSM(board);
+      // special yields
+      if (sm == 2 || sm == 3) {
+        return Math.min(11 * sm, getCuttingUnits(board, true));
+      } else {
+        return getRequiredCuttingUnits.bind(this)(board);
+      }
+    },
     getNumCuts: (sm) => Math.min(Math.max(Math.floor(sm / 4.0), 1), 4),
     allowsExtraCut: (sm) => 6 <= sm && sm <= 15,
     defectLimits: [
@@ -348,6 +377,15 @@ const GRADES = {
     ],
     yieldFactor: 8,
     yieldFactorExtra: 9,
+    getRequiredCuttingUnits: function (board) {
+      const sm = getSM(board);
+      // special yields
+      if (sm == 1 || sm == 2) {
+        return Math.min(12 * sm, getCuttingUnits(board, true));
+      } else {
+        return getRequiredCuttingUnits.bind(this)(board);
+      }
+    },
     getNumCuts: (sm) => Math.min(Math.max(Math.floor((sm + 1) / 3.0), 1), 5),
     allowsExtraCut: (sm) => 3 <= sm && sm <= 10,
     defectLimits: [
@@ -391,6 +429,15 @@ const GRADES = {
     ],
     yieldFactor: 8,
     yieldFactorExtra: 9,
+    getRequiredCuttingUnits: function (board) {
+      const sm = getSM(board);
+      // special yields
+      if (sm == 1 || sm == 2) {
+        return Math.min(12 * sm, getCuttingUnits(board, true));
+      } else {
+        return getRequiredCuttingUnits.bind(this)(board);
+      }
+    },
     getNumCuts: (sm) => Math.min(Math.max(Math.floor((sm + 1) / 3.0), 1), 5),
     allowsExtraCut: (sm) => 3 <= sm && sm <= 10,
     defectLimits: [
@@ -455,6 +502,15 @@ const GRADES = {
     ],
     yieldFactor: 8,
     yieldFactorExtra: 9,
+    getRequiredCuttingUnits: function (board) {
+      const sm = getSM(board);
+      // special yields
+      if (sm == 1 || sm == 2) {
+        return Math.min(12 * sm, getCuttingUnits(board, true));
+      } else {
+        return getRequiredCuttingUnits.bind(this)(board);
+      }
+    },
     getNumCuts: (sm) => Math.min(Math.max(Math.floor((sm + 1) / 3.0), 1), 5),
     allowsExtraCut: (sm) => 3 <= sm && sm <= 10,
     defectLimits: [
@@ -483,6 +539,15 @@ const GRADES = {
     ],
     yieldFactor: 6,
     yieldFactorExtra: 8,
+    getRequiredCuttingUnits: function (board) {
+      const sm = getSM(board);
+      // special yields
+      if (sm == 1) {
+        return 8 * sm;
+      } else {
+        return getRequiredCuttingUnits.bind(this)(board);
+      }
+    },
     getNumCuts: (sm) => Math.min(Math.max(Math.floor(sm / 2.0), 1), 7),
     allowsExtraCut: (sm) => 2 <= sm && 7 <= sm,
     defectLimits: [],
@@ -500,6 +565,9 @@ const GRADES = {
     ],
     yieldFactor: 4,
     yieldFactorExtra: null,
+    getRequiredCuttingUnits: function (board) {
+      return getRequiredCuttingUnits.bind(this)(board);
+    },
     getNumCuts: () => Infinity,
     allowsExtraCut: () => false,
     defectLimits: [],
@@ -529,7 +597,9 @@ class State {
     this.startTime = Date.now();
   }
   get board() {
-    return new Rectangle(DATA[this.boardId].board);
+    const boardJSON = DATA[this.boardId]["board"];
+    const widthJSON = DATA[this.boardId]["measured-width"];
+    return new Board(boardJSON, widthJSON);
   }
   get defects() {
     return DATA[this.boardId].defects[this.boardSide].map((d) => {
@@ -561,20 +631,31 @@ class State {
     ];
     return _.compact(rects);
   }
+  get firstLineal() {
+    return computeFirstLineal(this.board, this.defects);
+  }
 }
 
 function clamp(number, min, max) {
   return Math.max(min, Math.min(number, max));
 }
 
-function getCuttingUnits(cut) {
-  const size = cut.toSize();
+function getCuttingUnits(cut, toRound = false) {
+  const size = cut.toSize(toRound);
   return size.height.to("inch").toNumber() * size.width.to("feet").toNumber();
 }
 
 function getSM(board) {
   const s = board.toSize(true);
-  return Math.round((s.width.toNumber() * s.height.toNumber()) / 12);
+  // Use the measured width when computing the surface measure instead of the
+  // bounding width; see the UGRS manual for a further discussion on this
+  // (§5.1 "Three widths of a board" and figure 5.1.1, pp. 22–23):
+  // https://www.fs.fed.us/ne/newtown_square/publications/technical_reports/pdfs/1998/gtr254.pdf
+  const h = board.measuredWidth;
+  const v = (h.toNumber() * s.width.toNumber()) / 12;
+  // Round down in .5 cases
+  // https://stackoverflow.com/a/35827227/474311
+  return -Math.round(-v);
 }
 
 function smallerEqRect(r1, r2) {
@@ -656,6 +737,7 @@ class Renderer {
     this.boardShape = null;
     this.defectShapes = [];
     this.cutShapes = [];
+    this.firstLinealShapes = [];
     this.renderTimer();
   }
 
@@ -663,6 +745,9 @@ class Renderer {
     this.renderPanelBoard(state);
     this.renderPanelGrade(state);
     this.renderBoard(state);
+    if ($("#first-lineal-switch").is(":checked")) {
+      this.renderFirstLineal(state);
+    }
     this.renderCuts(state);
   }
 
@@ -741,6 +826,20 @@ class Renderer {
     this.renderTotalCuttingUnits(state);
   }
 
+  renderFirstLineal(state) {
+    for (const f of state.firstLineal.ends) {
+      const rect = new Rectangle({
+        left: f.limit.left,
+        top: state.board.top,
+        right: f.limit.right,
+        bottom: state.board.bottom,
+      });
+      const shape = this.drawRectShape(rect);
+      shape.attr({ fill: COLORS.firstLineal, opacity: 0.2 });
+      this.firstLinealShapes.push(shape);
+    }
+  }
+
   renderTotalCuttingUnits(state) {
     $("#total-cutting-units").text(getTotalCuttingUnits(state.cuts).toFixed(2));
   }
@@ -793,6 +892,9 @@ class Renderer {
   renderPanelBoard(state) {
     const boardSize = state.board.toSize();
     $("#board-size").text(sizeToStr(boardSize, 2));
+    $("#measured-width").text(
+      state.board.measuredWidth.format({ notation: "fixed", precision: 2 })
+    );
     $("#true-grade").text(SHORT_TO_LONG_GRADE[state.trueGrade]);
     $("#pred-grade").text(SHORT_TO_LONG_GRADE[state.predGrade]);
     $("#sm").text(getSM(state.board));
@@ -836,7 +938,9 @@ class Renderer {
 
     // requred cutting units
     const sm = getSM(state.board);
-    const reqCuttingUnits = sm * GRADES[state.grade].yieldFactor;
+    const reqCuttingUnits = GRADES[state.grade].getRequiredCuttingUnits(
+      state.board
+    );
     const numCuts = GRADES[state.grade].getNumCuts(sm);
     const allowsExtraCut = GRADES[state.grade].allowsExtraCut(sm);
     const suffix = numCuts > 1 ? "s" : "";
@@ -861,8 +965,9 @@ class Renderer {
     }
 
     // defect limits
+    const defects = state.grade === "FAS" ? state.firstLineal.defects : state.defects;
     const defectLimitsResults = GRADES[state.grade].defectLimits.map((d) =>
-      d.areWithinLimits(state.defects, state.board, true)
+      d.areWithinLimits(defects, state.board, true)
     );
     const hasDefectLimits = defectLimitsResults.every((r) => r[0]);
 
@@ -887,16 +992,156 @@ class Renderer {
       $("#defect-limits-check i").attr("class", "far " + checkmark);
     }
 
+    var isValidFirstLineal;
+
+    if (state.grade === "FAS") {
+      $("#first-lineal-group").show();
+      $("table#first-lineal tbody tr").remove();
+      for (const f of state.firstLineal.ends) {
+        const checkmark = f.isValid ? "fa-check-circle" : "fa-circle";
+        row = $("table#first-lineal tbody")[0].insertRow();
+        row.innerHTML =
+          `<td>${(100 * f.stats.clear).toFixed(2)}</td>` +
+          `<td>${(100 * f.stats.sound).toFixed(2)}</td>` +
+          `<td>${(100 * f.stats.unsound).toFixed(2)}</td>` +
+          `<td class="text-right"><i class="far ${checkmark}"></i></td>`;
+      }
+      isValidFirstLineal = state.firstLineal.ends.every((f) => f.isValid);
+      const textColor = isValidFirstLineal ? "text-success" : "text-danger";
+      const checkmark = isValidFirstLineal ? "fa-check-circle" : "fa-circle";
+      $("#first-lineal-label").attr("class", textColor);
+      $("#first-lineal-check i").attr("class", "far " + checkmark);
+    } else {
+      isValidFirstLineal = true;
+      $("#first-lineal-group").hide();
+    }
+
     // overall grade
     {
       const hasGrade =
-        hasMinSize && hasMinCutSize && hasReqCuttingUnits && hasDefectLimits;
+        hasMinSize &&
+        hasMinCutSize &&
+        hasReqCuttingUnits &&
+        hasDefectLimits &&
+        isValidFirstLineal;
       const textColor = hasGrade ? "text-success" : "text-danger";
       const checkmark = hasGrade ? "fa-check-circle" : "fa-circle";
       $("#grade-label").attr("class", "my-1 mr-2 " + textColor);
       $("#grade-check i").attr("class", "far " + checkmark);
     }
   }
+}
+
+function computeFirstLineal(board, defects) {
+  // Special case for FAS: First lineal rule.
+  //
+  // For a board of length L, treat differently the defects that are within one
+  // foot of the edges of the standard length S (see rules 58–60 from the NHLA
+  // rulebook).
+  //
+  // |←--------- L ---------→|
+  //    |←------ S ------→|
+  //  Δ | 1 |         | 1 | Δ
+  // +--.---*---------*---.--+
+  //     ^^^           ^^^
+  //
+  // For the marked regions ^^^:
+  // (ⅰ) splits, knots, holes are allowed,
+  // (ⅱ) but it should contain at least 50% clear wood and 25% sound wood.
+  //
+  // See also the following picture from Paul:
+  // https://teams.microsoft.com/l/message/19:c9b7ff0f432f4e94b66dc72ecf266108@thread.tacv2/1611006089753?tenantId=9e9cb7dc-f93d-4083-bd02-990cbba8c84c&groupId=0b6089fa-e5d7-49f0-81c3-ff85f109fa24&parentMessageId=1610360606959&teamName=NG%20-%20NHLA&channelName=General&createdTime=1611006089753
+  //
+  function toMag(unit) {
+    return math.divide(unit.to("inch"), RESOLUTION);
+  }
+
+  function cropR(rect, limL, limR) {
+    // Crops rectangle along the horizontal axis, to fit in the left and right
+    // limits, `limL` and `limR`.
+    return new Rectangle({
+      left: Math.min(Math.max(rect.left, limL), limR),
+      top: rect.top,
+      right: Math.min(Math.max(rect.right, limL), limR),
+      bottom: rect.bottom,
+    });
+  }
+
+  function cropD({ left, right }) {
+    // Curry function in order to play nicely with `map`.
+    return (defect) => {
+      return {
+        rect: cropR(defect.rect, left, right),
+        type: defect.type,
+      };
+    };
+  }
+
+  const isNotEmpty = (defect) => defect.rect.area > 0;
+
+  const reducerArea = (acc, cur) => acc + cur.rect.area;
+
+  function isSound(defect) {
+    return ["STAIN", "CHECKS", "SOUND_KNOT", "HOLE", "VOID"].includes(defect);
+  }
+
+  function isUnsound(defect) {
+    return !isSound(defect);
+  }
+
+  function computeStats(defects) {
+    const i = toMag(math.unit(1, "foot"));
+    const A = state.board.height * i;
+    // Area of sound **defects**
+    const sound = defects.filter(isSound).reduce(reducerArea, 0) / A;
+    const unsound = defects.filter(isUnsound).reduce(reducerArea, 0) / A;
+    return {
+      clear: 1 - sound - unsound,
+      // Area of sound **wood**—sound wood includes clear wood, so we subtract
+      // only the unsound defects from the wood area.
+      sound: 1 - unsound,
+      unsound: unsound,
+    };
+  }
+
+  // |←--------- L ---------→|
+  //    |←------ S ------→|
+  //  Δ | 1 |         | 1 | Δ
+  // +--.---*---------*---.--+
+  //     ^^^           ^^^
+
+  const I = toMag(math.unit(1, "foot"));
+  const L = toMag(board.toSize().width); // board length
+  const S = toMag(board.toSize(true).width); // standard length
+
+  const Δ = (L - S) / 2; // slack
+  const xMin = I + Δ;
+  const xMax = L - I - Δ;
+
+  // Defects that are not covered by the first lineal rule.
+  const defectsOutFirstLineal = defects.map(cropD({ left: xMin, right: xMax })).filter(isNotEmpty);
+  const limits = [
+    {
+      left: Δ,
+      right: xMin,
+    },
+    {
+      left: xMax,
+      right: L - Δ,
+    },
+  ];
+  // Decorate limits with auxiliary information: stats and validity.
+  const ends = limits.map((limit) => {
+    const stats = computeStats(defects.map(cropD(limit)).filter(isNotEmpty));
+    const isValid = stats.clear > 0.5 && stats.sound > 0.25;
+    return {
+      limit: limit,
+      stats: stats,
+      isValid: isValid,
+    };
+  });
+
+  return { defects: defectsOutFirstLineal, ends: ends };
 }
 
 const boardNames = DATA.map((datum) => datum.name).sort();
@@ -933,6 +1178,17 @@ new Clipboard("#copy-cuts", {
   text: function (trigger) {
     return state.cuts.map((cut) => cut.toStr()).join("; ");
   },
+});
+
+$("#paste-cuts").on("click", (event) => {
+  const text = $("#paste-cuts-values").val();
+  const cuts = text.split("; ").map((line) => {
+    const [l, t, r, b] = line.split(" ").map((val) => parseInt(val));
+    return new Rectangle({ left: l, top: t, right: r, bottom: b });
+  });
+  state.cuts = cuts;
+  renderer.renderCuts(state);
+  renderer.renderPanelGrade(state);
 });
 
 $("#load-cuts").on("click", () => {
@@ -1140,4 +1396,15 @@ $("input[type=range]").on("input", function () {
   state.K = (50 * 1.5) / this.value;
   renderer.renderBoard(state);
   renderer.renderCuts(state);
+});
+
+$("#first-lineal-switch").on("change", function () {
+  if ($("#first-lineal-switch").is(":checked")) {
+    renderer.renderFirstLineal(state);
+  } else {
+    for (const s of renderer.firstLinealShapes) {
+      s.remove();
+    }
+    renderer.firstLinealShapes = [];
+  }
 });
