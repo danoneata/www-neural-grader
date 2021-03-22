@@ -98,6 +98,7 @@ const data = [
             ]
         },
         "grade": "F1F",
+        "measured-width": 152.0,
         "name": "0961",
         "pred": "FAS"
     },
@@ -116,7 +117,7 @@ const data = [
                         {
                             "bottom": 132.0,
                             "left": 0,
-                            "right": 1536.0,
+                            "right": 1344.0,
                             "top": 0
                         }
                     ]
@@ -125,28 +126,6 @@ const data = [
             "front": [
                 [
                     "FAS",
-                    [
-                        {
-                            "bottom": 132.0,
-                            "left": 0,
-                            "right": 1320.0,
-                            "top": 4.0
-                        }
-                    ]
-                ],
-                [
-                    "FAS_SEL",
-                    [
-                        {
-                            "bottom": 132.0,
-                            "left": 0,
-                            "right": 1320.0,
-                            "top": 4.0
-                        }
-                    ]
-                ],
-                [
-                    "No1COM_F1F",
                     [
                         {
                             "bottom": 132.0,
@@ -182,8 +161,9 @@ const data = [
             ]
         },
         "grade": "FAS",
+        "measured-width": 132.0,
         "name": "0382",
-        "pred": "F1F"
+        "pred": "FAS"
     },
     {
         "board": {
@@ -207,6 +187,17 @@ const data = [
                 ],
                 [
                     "FAS_SEL",
+                    [
+                        {
+                            "bottom": 92.0,
+                            "left": 20.0,
+                            "right": 1108.0,
+                            "top": 0
+                        }
+                    ]
+                ],
+                [
+                    "No1COM_F1F",
                     [
                         {
                             "bottom": 92.0,
@@ -242,6 +233,28 @@ const data = [
                 ],
                 [
                     "No1COM_F1F",
+                    [
+                        {
+                            "bottom": 84.0,
+                            "left": 20.0,
+                            "right": 1204.0,
+                            "top": 16.0
+                        }
+                    ]
+                ],
+                [
+                    "No1COM_SEL",
+                    [
+                        {
+                            "bottom": 84.0,
+                            "left": 20.0,
+                            "right": 1204.0,
+                            "top": 16.0
+                        }
+                    ]
+                ],
+                [
+                    "No1COM",
                     [
                         {
                             "bottom": 84.0,
@@ -485,8 +498,9 @@ const data = [
             ]
         },
         "grade": "1C",
+        "measured-width": 92.0,
         "name": "1575",
-        "pred": "SEL"
+        "pred": "1C"
     },
     {
         "board": {
@@ -720,6 +734,7 @@ const data = [
             ]
         },
         "grade": "1C",
+        "measured-width": 188.0,
         "name": "2288",
         "pred": "F1F"
     },
@@ -823,6 +838,7 @@ const data = [
             ]
         },
         "grade": "FAS",
+        "measured-width": 152.0,
         "name": "0505",
         "pred": "F1F"
     },
@@ -1030,6 +1046,7 @@ const data = [
             ]
         },
         "grade": "F1F",
+        "measured-width": 132.0,
         "name": "0902",
         "pred": "FAS"
     },
@@ -1142,6 +1159,7 @@ const data = [
             ]
         },
         "grade": "2AC",
+        "measured-width": 56.0,
         "name": "2330",
         "pred": "1C"
     },
@@ -1249,6 +1267,7 @@ const data = [
             ]
         },
         "grade": "FAS",
+        "measured-width": 112.0,
         "name": "0275",
         "pred": "1C"
     },
@@ -1288,15 +1307,15 @@ const data = [
                     [
                         {
                             "bottom": 96.0,
-                            "left": 0,
-                            "right": 948.0,
-                            "top": 0
-                        },
-                        {
-                            "bottom": 48.0,
                             "left": 952.0,
                             "right": 2164.0,
                             "top": 0
+                        },
+                        {
+                            "bottom": 96.0,
+                            "left": 0,
+                            "right": 576.0,
+                            "top": 44.0
                         }
                     ]
                 ]
@@ -1306,43 +1325,9 @@ const data = [
                     "FAS",
                     [
                         {
-                            "bottom": 48.0,
-                            "left": 0,
-                            "right": 2164.0,
-                            "top": 0
-                        },
-                        {
-                            "bottom": 96.0,
-                            "left": 0,
-                            "right": 1916.0,
-                            "top": 48.0
-                        }
-                    ]
-                ],
-                [
-                    "FAS_SEL",
-                    [
-                        {
-                            "bottom": 48.0,
-                            "left": 0,
-                            "right": 2164.0,
-                            "top": 0
-                        },
-                        {
-                            "bottom": 96.0,
-                            "left": 0,
-                            "right": 1916.0,
-                            "top": 48.0
-                        }
-                    ]
-                ],
-                [
-                    "No1COM_F1F",
-                    [
-                        {
                             "bottom": 76.0,
                             "left": 0,
-                            "right": 1952.0,
+                            "right": 2164.0,
                             "top": 0
                         }
                     ]
@@ -1392,8 +1377,9 @@ const data = [
             ]
         },
         "grade": "F1F",
+        "measured-width": 96.0,
         "name": "0754",
-        "pred": "1C"
+        "pred": "F1F"
     },
     {
         "board": {
@@ -1422,6 +1408,39 @@ const data = [
                             "top": 0
                         }
                     ]
+                ],
+                [
+                    "No1COM_SEL",
+                    [
+                        {
+                            "bottom": 64.0,
+                            "left": 256.0,
+                            "right": 684.0,
+                            "top": 0
+                        }
+                    ]
+                ],
+                [
+                    "No1COM",
+                    [
+                        {
+                            "bottom": 64.0,
+                            "left": 256.0,
+                            "right": 684.0,
+                            "top": 0
+                        }
+                    ]
+                ],
+                [
+                    "No2ACOM",
+                    [
+                        {
+                            "bottom": 64.0,
+                            "left": 256.0,
+                            "right": 684.0,
+                            "top": 0
+                        }
+                    ]
                 ]
             ],
             "front": [
@@ -1440,6 +1459,39 @@ const data = [
                             "bottom": 64.0,
                             "left": 200.0,
                             "right": 776.0,
+                            "top": 4.0
+                        }
+                    ]
+                ],
+                [
+                    "No1COM_SEL",
+                    [
+                        {
+                            "bottom": 64.0,
+                            "left": 200.0,
+                            "right": 776.0,
+                            "top": 4.0
+                        }
+                    ]
+                ],
+                [
+                    "No1COM",
+                    [
+                        {
+                            "bottom": 64.0,
+                            "left": 200.0,
+                            "right": 776.0,
+                            "top": 4.0
+                        }
+                    ]
+                ],
+                [
+                    "No2ACOM",
+                    [
+                        {
+                            "bottom": 64.0,
+                            "left": 200.0,
+                            "right": 684.0,
                             "top": 4.0
                         }
                     ]
@@ -1597,8 +1649,9 @@ const data = [
             ]
         },
         "grade": "2AC",
+        "measured-width": 64.0,
         "name": "2351",
-        "pred": "1C"
+        "pred": "2AC"
     },
     {
         "board": {
@@ -1662,6 +1715,17 @@ const data = [
                             "bottom": 100.0,
                             "left": 28.0,
                             "right": 1128.0,
+                            "top": 12.0
+                        }
+                    ]
+                ],
+                [
+                    "No1COM_F1F",
+                    [
+                        {
+                            "bottom": 100.0,
+                            "left": 28.0,
+                            "right": 880.0,
                             "top": 12.0
                         }
                     ]
@@ -1828,8 +1892,9 @@ const data = [
             ]
         },
         "grade": "1C",
+        "measured-width": 100.0,
         "name": "1740",
-        "pred": "SEL"
+        "pred": "1C"
     },
     {
         "board": {
@@ -1871,6 +1936,39 @@ const data = [
                 ],
                 [
                     "No1COM_F1F",
+                    [
+                        {
+                            "bottom": 56.0,
+                            "left": 32.0,
+                            "right": 972.0,
+                            "top": 0
+                        }
+                    ]
+                ],
+                [
+                    "No1COM_SEL",
+                    [
+                        {
+                            "bottom": 56.0,
+                            "left": 32.0,
+                            "right": 972.0,
+                            "top": 0
+                        }
+                    ]
+                ],
+                [
+                    "No1COM",
+                    [
+                        {
+                            "bottom": 56.0,
+                            "left": 32.0,
+                            "right": 972.0,
+                            "top": 0
+                        }
+                    ]
+                ],
+                [
+                    "No2ACOM",
                     [
                         {
                             "bottom": 56.0,
@@ -1952,8 +2050,9 @@ const data = [
             ]
         },
         "grade": "2AC",
+        "measured-width": 64.0,
         "name": "2355",
-        "pred": "1C"
+        "pred": "2AC"
     },
     {
         "board": {
@@ -2009,6 +2108,17 @@ const data = [
                             "top": 8.0
                         }
                     ]
+                ],
+                [
+                    "No1COM_F1F",
+                    [
+                        {
+                            "bottom": 72.0,
+                            "left": 272.0,
+                            "right": 1536.0,
+                            "top": 8.0
+                        }
+                    ]
                 ]
             ]
         },
@@ -2054,6 +2164,7 @@ const data = [
             ]
         },
         "grade": "1C",
+        "measured-width": 80.0,
         "name": "1392",
         "pred": "SEL"
     },
@@ -2123,6 +2234,7 @@ const data = [
             ]
         },
         "grade": "SEL",
+        "measured-width": 60.0,
         "name": "1005",
         "pred": "1C"
     },
@@ -2153,14 +2265,8 @@ const data = [
                     [
                         {
                             "bottom": 92.0,
-                            "left": 1116.0,
+                            "left": 420.0,
                             "right": 3084.0,
-                            "top": 4.0
-                        },
-                        {
-                            "bottom": 84.0,
-                            "left": 156.0,
-                            "right": 1116.0,
                             "top": 4.0
                         }
                     ]
@@ -2237,6 +2343,7 @@ const data = [
             ]
         },
         "grade": "SEL",
+        "measured-width": 88.0,
         "name": "1225",
         "pred": "FAS"
     }
