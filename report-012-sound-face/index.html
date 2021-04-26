@@ -15,12 +15,12 @@
       <h1>Clear and sound cuttings</h1>
       <p>
                 When grading, we measure the yield based on the clear cuttings.
-                A clear cuttings is defect-free and sound on the reverse side 
-                (that is, it doesn't contain unsound defects larger than 1/4&quot; on the opossite side).
-                In the initial experiments, I have treated the two sides independently (method 1).
-                Now I'm trying to incorporate this rule by simply propagating the unsound defects from on side to the other (method 2).
-                However, this approach hinders the performance—drops the accuracy from 92.26% to 85.96%.
-                Below I'm showing those sample for which the original method gives the right results,
+                A clear cutting is defect-free on one side and sound on the reverse 
+                (that is, it doesn't contain unsound defects larger than 1/4&quot;).
+                In the initial experiments, I have ignored the soundness requirement (method 1).
+                Now I'm trying to incorporate this rule by simply propagating the unsound defects from on opposite side to the other side (method 2).
+                However, this approach hinders the performance—drops the accuracy from 92.26% (27 mistakes, 4 under graded, 23, over graded) to 85.96% (49 mistakes, 43 under graded, 6 over graded).
+                Below I'm showing those samples for which the original method gives the correct results,
                 while the &quot;improved&quot; approach hurts the final grade.
             </p>
       <div class="mt-3">
