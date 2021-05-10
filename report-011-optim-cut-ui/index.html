@@ -44,7 +44,7 @@
             <li>The "snap to min. cut size" toggle (from the "Cuts" panel) allows you to easily fit cuts that have <i>exactly</i> the minimum cut size along a dimension.</li>
         </ul>
       </div>
-      <div class="my-2" id="svg-canvas"></div>
+      <div class="my-2 sticky-top" id="svg-canvas"></div>
       <div class="row">
         <div class="col-sm-6">
           <div class="card">
@@ -70,6 +70,10 @@
               <div class="custom-control-inline custom-switch">
                 <input type="checkbox" class="custom-control-input" id="first-lineal-switch">
                 <label class="custom-control-label" for="first-lineal-switch">show first lineal regions</label>
+              </div>
+              <div class="custom-control-inline custom-switch">
+                <input type="checkbox" class="custom-control-input" id="defects-other-side-switch">
+                <label class="custom-control-label" for="defects-other-side-switch">show unsound defects from the reverse side</label>
               </div>
             </div>
             <ul class="list-group list-group-flush">
@@ -161,7 +165,10 @@
                   <tbody>
                   </tbody>
                 </table>
-                <span class="text-muted">Note: Percentage of clear, sound and unsound wood for each of the two first lineal regions.</span>
+                <span class="text-muted">
+                    Note: Percentage of clear wood and sound and unsound defects for each of the two first lineal regions.
+                    A region is valid if the clear wood is at least 50% and unsound defects are limited to 25% of the area.
+                </span>
               </li>
             </ul>
           </div>

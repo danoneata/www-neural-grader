@@ -171,6 +171,7 @@ const DEFAULT_CUT = { left: 5, top: 5, right: 100, bottom: 30 };
 const COLORS = {
   board: "rgb(222, 184, 135)",
   defect: "rgb(45, 32, 27)",
+  defectOtherSide: "rgb(0, 128, 128)",
   cut: "rgb(130, 173, 215)",
   // selected: "rgb(7, 57, 12)",
   selected: "#07397e",
@@ -201,6 +202,16 @@ const SHORT_TO_LONG_GRADE = {
 function getRequiredCuttingUnits(board) {
   const sm = getSM(board);
   return sm * this.yieldFactor;
+}
+
+function getOtherSide(side) {
+  if (side == "front") {
+    return "back";
+  } else if (side == "back") {
+    return "front";
+  } else {
+    throw "Unknown side type";
+  }
 }
 
 const GRADES = {
@@ -606,6 +617,12 @@ class State {
       return { rect: new Rectangle(d.rect), type: d.type };
     });
   }
+  get defectsOtherSide() {
+    const otherSide = getOtherSide(this.boardSide);
+    return DATA[this.boardId].defects[otherSide].map((d) => {
+      return { rect: new Rectangle(d.rect), type: d.type };
+    });
+  }
   get trueGrade() {
     return DATA[this.boardId].grade;
   }
@@ -690,7 +707,7 @@ function sizeToStr(size, precision = 0) {
 
 function getTotalCuttingUnits(cuts) {
   return _.compact(cuts)
-    .map(getCuttingUnits)
+    .map((cut) => getCuttingUnits(cut))
     .reduce((a, b) => a + b, 0);
 }
 
@@ -738,6 +755,7 @@ class Renderer {
     this.defectShapes = [];
     this.cutShapes = [];
     this.firstLinealShapes = [];
+    this.defectsOtherSideShapes = [];
     this.renderTimer();
   }
 
@@ -747,6 +765,9 @@ class Renderer {
     this.renderBoard(state);
     if ($("#first-lineal-switch").is(":checked")) {
       this.renderFirstLineal(state);
+    }
+    if ($("#defects-other-side-switch").is(":checked")) {
+      this.renderDefectsOtherSide(state);
     }
     this.renderCuts(state);
   }
@@ -837,6 +858,14 @@ class Renderer {
       const shape = this.drawRectShape(rect);
       shape.attr({ fill: COLORS.firstLineal, opacity: 0.2 });
       this.firstLinealShapes.push(shape);
+    }
+  }
+
+  renderDefectsOtherSide(state) {
+    for (const defect of state.defectsOtherSide) {
+      const defectShape = this.drawRectShape(defect.rect);
+      defectShape.attr({ fill: COLORS.defectOtherSide, opacity: 0.5 });
+      this.defectsOtherSideShapes.push(defectShape);
     }
   }
 
@@ -1097,9 +1126,7 @@ function computeFirstLineal(board, defects) {
     const unsound = defects.filter(isUnsound).reduce(reducerArea, 0) / A;
     return {
       clear: 1 - sound - unsound,
-      // Area of sound **wood**—sound wood includes clear wood, so we subtract
-      // only the unsound defects from the wood area.
-      sound: 1 - unsound,
+      sound: sound,
       unsound: unsound,
     };
   }
@@ -1133,7 +1160,7 @@ function computeFirstLineal(board, defects) {
   // Decorate limits with auxiliary information: stats and validity.
   const ends = limits.map((limit) => {
     const stats = computeStats(defects.map(cropD(limit)).filter(isNotEmpty));
-    const isValid = stats.clear > 0.5 && stats.sound > 0.25;
+    const isValid = stats.clear >= 0.50 && stats.unsound <= 0.25;
     return {
       limit: limit,
       stats: stats,
@@ -1392,10 +1419,16 @@ CANVAS.on("mousemove", (event) => {
   }
 });
 
-$("input[type=range]").on("input", function () {
+$("#zoom").on("input", function () {
   state.K = (50 * 1.5) / this.value;
   renderer.renderBoard(state);
   renderer.renderCuts(state);
+  if ($("#first-lineal-switch").is(":checked")) {
+    renderer.renderFirstLineal(state);
+  }
+  if ($("#defects-other-side-switch").is(":checked")) {
+    renderer.renderDefectsOtherSide(state);
+  }
 });
 
 $("#first-lineal-switch").on("change", function () {
@@ -1406,5 +1439,16 @@ $("#first-lineal-switch").on("change", function () {
       s.remove();
     }
     renderer.firstLinealShapes = [];
+  }
+});
+
+$("#defects-other-side-switch").on("change", function () {
+  if ($("#defects-other-side-switch").is(":checked")) {
+    renderer.renderDefectsOtherSide(state);
+  } else {
+    for (const s of renderer.defectsOtherSideShapes) {
+      s.remove();
+    }
+    renderer.defectsOtherSideShapes = [];
   }
 });
