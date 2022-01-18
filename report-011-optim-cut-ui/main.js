@@ -918,6 +918,15 @@ class Renderer {
     }
   }
 
+  determinePoorFace() {
+    const sides = Object.keys(DATA[state.boardId]["cuts"]);
+    if ("front:orig" in sides) {
+      return "front";
+    } else {
+      return "back";
+    }
+  }
+
   renderPanelBoard(state) {
     const boardSize = state.board.toSize();
     $("#board-size").text(sizeToStr(boardSize, 2));
@@ -926,6 +935,7 @@ class Renderer {
     );
     $("#true-grade").text(SHORT_TO_LONG_GRADE[state.trueGrade]);
     $("#pred-grade").text(SHORT_TO_LONG_GRADE[state.predGrade]);
+    $("#pred-poor-face").text(this.determinePoorFace());
     $("#sm").text(getSM(state.board));
   }
 
@@ -1219,7 +1229,11 @@ $("#paste-cuts").on("click", (event) => {
 });
 
 $("#load-cuts").on("click", () => {
-  let gradesAndCuts = DATA[state.boardId].cuts[state.boardSide];
+  let side = state.boardSide;
+  if (!$("#defects-other-side-switch").is(":checked") && (side + ":orig") in DATA[state.boardId].cuts) {
+    side = side + ":orig";
+  }
+  let gradesAndCuts = DATA[state.boardId].cuts[side];
   let gc = _.find(gradesAndCuts, ([g]) => g === state.grade.split("_")[0]);
   if (gc === undefined) {
     gc = _.last(gradesAndCuts);

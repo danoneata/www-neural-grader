@@ -42,6 +42,7 @@
             <li>To reveal the defect type and its size, hover with the mouse over it.</li>
             <li>The "add cut" button from the "cuts" panel, adds the maximum-area clear cut available to the board.</li>
             <li>The "snap to min. cut size" toggle (from the "Cuts" panel) allows you to easily fit cuts that have <i>exactly</i> the minimum cut size along a dimension.</li>
+            <li>If "show unsound defects from the reverse side" is selected and you are on the poor face of the board, the "load" button will show the cuts after re-grading on the propagated defects.</li>
         </ul>
       </div>
       <div class="my-2 sticky-top" id="svg-canvas"></div>
@@ -84,6 +85,9 @@
               <li class="list-group-item">
                 <span class="text-secondary">predicted grade:</span>
                 <span id="pred-grade"></span>
+                ◇
+                <span class="text-secondary">predicted poor face:</span>
+                <span id="pred-poor-face"></span>
               </li>
               <li class="list-group-item">
                 <span class="text-secondary">board size:</span>
