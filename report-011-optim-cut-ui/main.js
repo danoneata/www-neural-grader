@@ -197,6 +197,7 @@ const SHORT_TO_LONG_GRADE = {
   "1C": "#1 COM",
   "2AC": "#2A COM",
   "3AC": "#3A COM",
+  "NULL": "below grade",
 };
 
 function getRequiredCuttingUnits(board) {
@@ -826,7 +827,7 @@ class Renderer {
     for (const defect of state.defects) {
       // const defectShape = CANVAS.rect();
       const defectShape = this.drawRectShape(defect.rect);
-      const defectSizeStr = sizeToStr(defect.rect.toSize(), 1);
+      const defectSizeStr = sizeToStr(defect.rect.toSize(), 2);
       defectShape.attr({
         fill: COLORS[defect.type],
         "data-toggle": "tooltip",
@@ -920,7 +921,7 @@ class Renderer {
 
   determinePoorFace() {
     const sides = Object.keys(DATA[state.boardId]["cuts"]);
-    if ("front:orig" in sides) {
+    if (sides.includes("front:orig")) {
       return "front";
     } else {
       return "back";
@@ -1242,6 +1243,8 @@ $("#load-cuts").on("click", () => {
 
   renderer.renderCuts(state);
   renderer.renderPanelGrade(state);
+  
+  // console.log("loaded cuts for side " + side);
 });
 
 // https://stackoverflow.com/a/43053803/474311
